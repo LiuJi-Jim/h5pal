@@ -31,15 +31,17 @@ h5pal
 
 # 其他
 
-## Screenshots
+## 没图你说个JB
 
-[这里](http://liuji-jim.github.io/h5pal/screenshots.html)
+[Screenshots](http://liuji-jim.github.io/h5pal/screenshots.html)
 
 ## 完成度
 
 | 模块 | 进度 |
 | --- | ---:|
 | 资源 | 90% |
+| 读档 | 99% |
+| 存档 | 0% |
 | 位图 | 99% |
 | Sprite | 99% |
 | 地图 | 90% |
