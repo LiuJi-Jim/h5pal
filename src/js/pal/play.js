@@ -202,7 +202,7 @@ play.useItem = function*() {
  */
 play.equipItem = function*() {
   while (true) {
-    var objcet = yield itemmenu.itemSelectMenu(null, ItemFlag.Equipable);
+    var object = yield itemmenu.itemSelectMenu(null, ItemFlag.Equipable);
 
     if (object === 0) {
        return;

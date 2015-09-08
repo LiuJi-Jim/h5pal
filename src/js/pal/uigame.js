@@ -929,8 +929,8 @@ utils.extend(uigame, {
       // Draw the current equipment of the selected player
       var role = Global.party[currentPlayer].playerRole;
       for (i = 0; i < ui.MAX_PLAYER_EQUIPMENTS; i++) {
-        if (GameData.playerRole.equipment[i][role] != 0) {
-          ui.drawText(ui.getWord(GameData.playerRole.equipment[i][role]), PAL_XY(130, 11 + i * 22), ui.MENUITEM_COLOR, true, false);
+        if (GameData.playerRoles.equipment[i][role] != 0) {
+          ui.drawText(ui.getWord(GameData.playerRoles.equipment[i][role]), PAL_XY(130, 11 + i * 22), ui.MENUITEM_COLOR, true, false);
         }
       }
       // Draw the stats of the currently selected player
@@ -959,7 +959,7 @@ utils.extend(uigame, {
           }
         }
 
-        ui.drawText(ui.getWord(GameData.playerRole.name[role]), PAL_XY(15, 108 + 18 * i), color, true, false);
+        ui.drawText(ui.getWord(GameData.playerRoles.name[role]), PAL_XY(15, 108 + 18 * i), color, true, false);
       }
       // Draw the text label and amount of the item
       if (item != 0) {
@@ -982,13 +982,13 @@ utils.extend(uigame, {
             selectedColor++;
           }
 
-          colorChangeTime = now + (600 / uiMENUITEM_COLOR_SELECTED_TOTALNUM);
+          colorChangeTime = now + (600 / ui.MENUITEM_COLOR_SELECTED_TOTALNUM);
 
           // Redraw the selected item if needed.
           role = Global.party[currentPlayer].playerRole;
 
           if (GameData.object[item].item.flags & (ItemFlag.EquipableByPlayerRole_First << role)) {
-            ui.drawText(ui.getWord(GameData.playerRole.name[role]), PAL_XY(15, 108 + 18 * currentPlayer), selectedColor, true, true);
+            ui.drawText(ui.getWord(GameData.playerRoles.name[role]), PAL_XY(15, 108 + 18 * currentPlayer), selectedColor, true, true);
           }
         }
 
