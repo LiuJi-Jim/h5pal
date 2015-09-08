@@ -31,6 +31,10 @@ h5pal
 
 # 其他
 
+## Screenshots
+
+[这里](http://liuji-jim.github.io/h5pal/screenshots.html)
+
 ## 完成度
 
 | 模块 | 进度 |
