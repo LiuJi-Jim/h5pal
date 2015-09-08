@@ -92,8 +92,8 @@ main.start = function() {
 
     Palette.init(Files.PAT);
 
-    var surf = new Surface(document.getElementById('cvs'), 320, 200, document.getElementById('debug'));
-    //var surf = new Surface(document.getElementById('cvs'), 320, 200, null);
+    //var surf = new Surface(document.getElementById('cvs'), 320, 200, document.getElementById('debug'));
+    var surf = new Surface(document.getElementById('cvs'), 320, 200, null);
 
     yield ui.init(surf); // 初始化UI，内含初始化文字
 
