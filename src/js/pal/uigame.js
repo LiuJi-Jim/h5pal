@@ -828,7 +828,7 @@ utils.extend(uigame, {
     ui.drawText(ui.getWord(ui.CASH_LABEL), PAL_XY(30, 155), 0, false, false);
     ui.drawNumber(Global.cash, 6, PAL_XY(69, 159), NumColor.Yellow, NumAlign.Right);
 
-    ui.updateScreen(rect);
+    surface.updateScreen(rect);
   },
 
   buyMenu: function*(storeNum){
