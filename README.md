@@ -35,6 +35,8 @@ h5pal
 
 能走，能对话，能开宝箱，能用道具……能做很多事情，排除BUG造成剧情无法进行下去以外，只靠走地图可以体验很多很多剧情……了。
 
+等等，没实现战斗系统？`return true;`啊！
+
 ## 没图你说个JB
 
 [Screenshots](http://liuji-jim.github.io/h5pal/screenshots.html)
