@@ -1,0 +1,48 @@
+@require 'includes/settings.styl'
+
+body
+  margin: 0
+  padding: 0
+
+.page
+  margin: 8px
+  margin-bottom: 160px
+
+#wrap
+  position: relative
+
+#cvs
+  position: absolute
+  left: 0
+  top: 0
+  width: 640px
+  height: 400px
+  z-index: 1
+
+#debug
+  position: absolute
+  left: 0
+  top: 0
+  width: 640px
+  height: 400px
+  z-index: 2
+
+#debugLayer
+  position: absolute
+  left: 0
+  top: 0
+  width: 640px
+  height: 400px
+  z-index: 2
+
+.debugObj
+  position: absolute
+  width: 10px
+  height: 10px
+  box-sizing: border-box
+  background: rgba(255,255,255,0.4)
+  overflow: hidden
+
+.debugObj: hover
+  background: rgba(255,255,255,0.8)
+  overflow: visible
