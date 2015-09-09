@@ -64,8 +64,20 @@ scene.makeScene = function*() {
   yield scene.render();
 };
 
-scene.getPlayerSprite = function(playerID) {
-  var spriteNum = GameData.playerRoles.spriteNum[playerID];
+scene.getPlayerSprite = function(i) {
+  var player = Global.party[i];
+  var playerID = player.playerRole;
+  var spriteNum;
+  if (i > Global.maxPartyMemberIndex && Global.numFollower > 0) {
+    // 如果是跟随者，那么spriteNum就是它的ID
+    spriteNum = playerID;
+  } else {
+    // 否则从GameData.playerRoles里获取spriteNum（我也不知道为虾米要这么搞……）
+    spriteNum = GameData.playerRoles.spriteNum[playerID];
+  }
+  if (typeof spriteNum === 'undefined') {
+    return null;
+  }
   var cache = scene.playerSpriteCache;
   var sprite = cache[spriteNum];
   if (!sprite) {
@@ -509,7 +521,7 @@ utils.extend(Scene.prototype, {
     // Players
     for (var i = 0; i <= Global.maxPartyMemberIndex + Global.numFollower; ++i) {
       var player = party[i];
-      var sprite = scene.getPlayerSprite(player.playerRole);
+      var sprite = scene.getPlayerSprite(i);
       var bitmap = sprite.getFrame(player.frame);
 
       if (!bitmap) continue;
