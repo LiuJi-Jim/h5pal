@@ -490,7 +490,7 @@ utils.extend(uigame, {
             }
 
             input.clear();
-            yield sleep(FrameTime);
+            yield sleepByFrame(1);
           }
           input.clear();
         }
@@ -684,7 +684,7 @@ utils.extend(uigame, {
           current++;
           break;
         }
-        yield sleep(FrameTime);
+        yield sleepByFrame(1);
       }
     }
   },
@@ -776,7 +776,7 @@ utils.extend(uigame, {
           break;
         }
 
-        yield sleep(FrameTime);
+        yield sleepByFrame(1);
       }
 
       if (amount <= 0) {
@@ -996,7 +996,7 @@ utils.extend(uigame, {
           break;
         }
 
-        yield sleep(FrameTime);
+        yield sleepByFrame(1);
       }
       if (item == 0) {
          return;

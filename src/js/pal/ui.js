@@ -167,6 +167,8 @@ utils.extend(ui, {
 
     surface.blitRLE(rightSprite, PAL_XY(rect.x, rect.y));
 
+    surface.updateScreen(box);
+
     return box;
   },
 
@@ -348,7 +350,7 @@ utils.extend(ui, {
         }
       }
 
-      yield sleep(FrameTime);
+      yield sleepByFrame(1);
     }
   },
   loadObjectDesc: function*(filename) {
