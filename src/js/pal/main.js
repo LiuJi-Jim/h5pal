@@ -7,6 +7,7 @@ import welcome from './welcome';
 import ui from './ui';
 import scene from './scene';
 import game from './game';
+import rng from './rng';
 
 log.trace('main module load');
 
@@ -97,7 +98,11 @@ main.start = function() {
 
     yield ui.init(surf); // 初始化UI，内含初始化文字
 
+    yield rng.init(surf);
+
     input.init();
+
+    yield welcome.trademarkScreen(surf); // 软星商标
 
     yield welcome.splashScreen(surf); // 开场动画
 

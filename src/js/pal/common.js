@@ -8,7 +8,7 @@ var slice = Array.prototype.slice;
  * @type {Object}
  */
 global.DEBUG = {
-  Timing: true,
+  Timing: false,
   ShowSpriteRect: false,
   ShowSpritePos:  false,
   ShowSpriteSize: false,

@@ -2,6 +2,7 @@ import scene from './scene';
 import Palette from './palette';
 import script_extras from './script-extras';
 import res from './res';
+import rng from './rng';
 
 log.trace('script module load');
 
@@ -930,12 +931,12 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
       break;
     case 0x0037:
       script.debug('[SCRIPT] Play RNG animation');
-      // WARNING TODO
-      //PAL_RNGPlay(Global.curPlayingRNG,
-      //  sc.operand[0],
-      //  sc.operand[1] > 0 ? sc.operand[1] : 999,
-      //  sc.operand[2] > 0 ? sc.operand[2] : 16
-      //);
+      yield rng.play(
+        Global.curPlayingRNG,
+        sc.operand[0],
+        sc.operand[1] > 0 ? sc.operand[1] : 999,
+        sc.operand[2] > 0 ? sc.operand[2] : 16
+      );
       break;
     case 0x0038:
       script.debug('[SCRIPT] Teleport the party out of the scene');

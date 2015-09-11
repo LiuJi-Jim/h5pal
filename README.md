@@ -61,7 +61,7 @@ h5pal
 | 平常UI | 50% |
 | 战斗UI | 0% |
 | 战斗（天坑） | 0% |
-| 视频 | 0% |
+| 播片 | 90% |
 | 音乐 | 0% |
 | 音效 | 0% |
 
@@ -136,7 +136,7 @@ Eh wait, no battle system? What about encounters? `return true;` LoL.
 | Game UI | 50% |
 | Battle UI | 0% |
 | Battle (OMG) | 0% |
-| Video | 0% |
+| Movie | 90% |
 | Music | 0% |
 | Sound | 0% |
 

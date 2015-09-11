@@ -4,6 +4,7 @@ import MKF from './mkf';
 import Sprite from './sprite';
 import Palette from './palette';
 import input from './input';
+import rng from './rng';
 
 log.trace('welcome module load');
 
@@ -13,16 +14,15 @@ var SPRITENUM_SPLASH_TITLE = 0x47;
 var SPRITENUM_SPLASH_CRANE = 0x49;
 var NUM_RIX_TITLE          = 0x5;
 
-function trademarkScreen(){
-  /*
-  PAL_SetPalette(3, FALSE);
-  PAL_RNGPlay(6, 0, 1000, 25);
-  UTIL_Delay(1000);
-  PAL_FadeOut(1);
-  */
-}
-
 var welcome = {};
+
+welcome.trademarkScreen = function*(surface) {
+  var palette = Palette.get(3).day;
+  surface.setPalette(palette);
+  yield rng.play(6, 0, 1000, 25);
+  yield sleep(1000);
+  yield surface.fadeOut(1);
+};
 
 welcome.splashScreen = function*(surface) {
   var list = yield ajax.loadMKF('FBP', 'PAT', 'MGO');

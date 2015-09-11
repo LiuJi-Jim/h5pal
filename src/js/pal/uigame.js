@@ -168,7 +168,7 @@ utils.extend(uigame, {
       boxes[i].free();
     }
 
-    surface.updateScreen();
+    //surface.updateScreen(); // box.free调用surface.putRect已经更新了屏幕
 
     if (menu === ui.MENUITEM_VALUE_CANCELLED) {
       return enabled;
