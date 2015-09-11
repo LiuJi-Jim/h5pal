@@ -54,6 +54,7 @@ h5pal
 | 位图 | 99% |
 | Sprite | 99% |
 | 地图 | 90% |
+| 场景 | 90% |
 | 调色盘 | 80% |
 | 文本 | 99% |
 | 脚本（天坑） | 50% |
@@ -128,6 +129,7 @@ Eh wait, no battle system? What about encounters? `return true;` LoL.
 | Bitmap | 99% |
 | Sprite | 99% |
 | Map | 90% |
+| Scene | 90% |
 | Palette | 80% |
 | Text | 99% |
 | Script (OMG) | 50% |
