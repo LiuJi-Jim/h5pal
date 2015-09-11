@@ -132,18 +132,18 @@ game.loadGame = function*(slot) {
     }
   }
   //Global.party = s.party;
-  memcpy(Global.party.uint8Array, s.party.uint8Array);
+  memcpy(Global.party.uint8Array, s.party.uint8Array, Global.party.uint8Array.length);
   //Global.trail = s.trail;
-  memcpy(Global.trail.uint8Array, s.trail.uint8Array);
+  memcpy(Global.trail.uint8Array, s.trail.uint8Array, Global.trail.uint8Array.length);
   //Global.exp = s.exp;
-  memcpy(Global.exp.uint8Array, s.exp.uint8Array);
+  memcpy(Global.exp.uint8Array, s.exp.uint8Array, Global.exp.uint8Array.length);
   GameData.playerRoles = s.playerRoles;
   //Global.poisonStatus = [];
-  memset(Global.poisonStatus.uint8Array, 0);
+  memset(Global.poisonStatus.uint8Array, 0, Global.poisonStatus.uint8Array.length);
   //for (var i=0; i<Const.MAX_POISONS; ++i){
   //  Global.poisonStatus[i] = initTypedArray(PoisonStatus, Const.MAX_PLAYABLE_PLAYER_ROLES);
   //}
-  memcpy(Global.inventory.uint8Array, s.inventory.uint8Array);
+  memcpy(Global.inventory.uint8Array, s.inventory.uint8Array, Global.inventory.uint8Array.length);
   //Global.inventory = s.inventory;
   GameData.scene = s.scene;
   GameData.object = s.object;
@@ -174,7 +174,7 @@ game.initGameData = function*(slot) {
   Global.inBattle = false;
 
   //game.clearPlayerStatus();
-  memset(Global.playerStatus.uint8Array, 0);
+  memset(Global.playerStatus.uint8Array, 0, Global.playerStatus.uint8Array.length);
   yield script.updateEquipments();
 };
 

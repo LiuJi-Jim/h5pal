@@ -10,7 +10,8 @@ var scene = {
   playerSpriteCache: {},
   playerSprites: [],
   mapCache: {},
-  thisStepFrame: 0
+  thisStepFrame: 0,
+  applyWaveIndex: 0
 };
 
 var abs = Math.abs;
@@ -416,75 +417,49 @@ utils.extend(Scene.prototype, {
   },
   applyWave: function() {
     var wave = new Array(32);
-    /*
-    int                  wave[32];
-    int                  i, a, b;
-    static int           index = 0;
-    LPBYTE               p;
-    BYTE                 buf[320];
-
-    Global.wScreenWave += Global.sWaveProgression;
-
-    if (Global.wScreenWave == 0 || Global.wScreenWave >= 256)
-    {
-      //
+    Global.screenWave += Global.waveProgression;
+    var buf = new Uint8Array(320);
+    if (Global.screenWave === 0 || Global.screenWave >= 256) {
       // No need to wave the screen
-      //
-      Global.wScreenWave = 0;
-      Global.sWaveProgression = 0;
+      Global.screenWave = 0;
+      Global.waveProgression = 0;
       return;
     }
 
-    //
     // Calculate the waving offsets.
-    //
-    a = 0;
-    b = 60 + 8;
+    var a = 0;
+    var b = 60 + 8;
 
-    for (i = 0; i < 16; i++)
-    {
+    for (var i = 0; i < 16; i++) {
       b -= 8;
       a += b;
 
-      //
       // WARNING: assuming the screen width is 320
-      //
-      wave[i] = a * Global.wScreenWave / 256;
+      wave[i] = ~~(a * Global.screenWave / 256);
       wave[i + 16] = 320 - wave[i];
     }
 
-    //
     // Apply the effect.
     // WARNING: only works with 320x200 8-bit surface.
-    //
-    a = index;
-    p = (LPBYTE)(lpSurface->pixels);
+    a = scene.applyWaveIndex;
+    var p = surface.byteBuffer;
 
-    //
     // Loop through all lines in the screen buffer.
-    //
-    for (i = 0; i < 200; i++)
-    {
+    for (var i = 0; i < 200; i++) {
       b = wave[a];
 
-      if (b > 0)
-      {
-         //
+      if (b > 0 && b < 320) {
          // Do a shift on the current line with the calculated offset.
-         //
          memcpy(buf, p, b);
-         //memmove(p, p + b, 320 - b);
-         memmove(p, &p[b], 320 - b);
-         //memcpy(p + 320 - b, buf, b);
-         memcpy(&p[320 - b], buf, b);
+         memmove(p, p.subarray(b), 320 - b);
+         memcpy(p.subarray(320 - b), buf, b);
       }
 
       a = (a + 1) % 32;
-      p += lpSurface->pitch;
+      p = p.subarray(surface.pitch);
     }
 
-    index = (index + 1) % 32;
-    */
+    scene.applyWaveIndex = (scene.applyWaveIndex + 1) % 32;
   },
   getMap: function() {
     var mapNum = this.mapNum,

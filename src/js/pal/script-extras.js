@@ -15,7 +15,7 @@ script_extras.init = function*(surf) {
 
   script.updateEquipments = function*() {
     var playerRoles = GameData.playerRoles;
-    memset(Global.equipmentEffect.uint8Array, 0);
+    memset(Global.equipmentEffect.uint8Array, 0, Global.equipmentEffect.uint8Array.length);
     for (var i=0; i<Const.MAX_PLAYER_ROLES; ++i) {
       for (var j=0; j<Const.MAX_PLAYER_EQUIPMENTS; ++j) {
         var w = playerRoles.equipment[j][i];
@@ -226,12 +226,12 @@ script_extras.init = function*(surf) {
         break;
       }
       if (inventory[i].amount > 0) {
-        memcpy(inventory[j].uint8Array, inventory[i].uint8Array);
+        memcpy(inventory[j].uint8Array, inventory[i].uint8Array, inventory[j].uint8Array.length);
         j++;
       }
     }
     for (; j< Const.MAX_INVENTORY; ++j) {
-      memset(inventory[j].uint8Array, 0);
+      memset(inventory[j].uint8Array, 0, inventory[j].uint8Array.length);
     }
   };
 

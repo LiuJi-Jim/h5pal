@@ -61,18 +61,24 @@ var SWAP16 = global.SWAP16 = function(x) {
 };
 
 var memset = global.memset = function(p, val, len) {
-  len = len || p.byteLength;
+  len = len || 0;
   for (var i=0; i<len; ++i) {
     p[i] = val;
   }
 };
 
 var memcpy = global.memcpy = function(dst, src, len) {
-  len = len || dst.byteLength;
+  len = len || 0;
   for (var i=0; i<len; ++i) {
     dst[i] = src[i];
   }
 };
+
+var memmove = global.memmove = function(dst, src, len) {
+  var tmp = new dst.constructor(len);
+  memcpy(tmp, src, len);
+  memcpy(dst, tmp, len);
+}
 
 /* 继承DataView */
 var BinaryReader = global.BinaryReader = function(buffer, byteOffset, byteLength, littleEndian) {

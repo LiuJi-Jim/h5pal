@@ -1343,7 +1343,7 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
       //for (var i=0; i<Const.MAX_POISONS; ++i) {
       //  Global.poisonStatus[i] = initTypedArray(PoisonStatus, Const.MAX_PLAYABLE_PLAYER_ROLES);
       //}
-      memset(Global.poisonStatus.uint8Array, 0);
+      memset(Global.poisonStatus.uint8Array, 0, Global.poisonStatus.uint8Array.length);
       yield script.updateEquipments();
       break;
     case 0x0076:
@@ -1712,7 +1712,7 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
           // WARNING TODO
           //memset(&(battle.enemy[i]), 0, sizeof(BATTLEENEMY));
           //battle.resetEnemy(i);
-          memset(battle.enemy[i].uint8Array, 0);
+          memset(battle.enemy[i].uint8Array, 0, battle.enemy[i].uint8Array.length);
           battle.enemy[i].objectID = battle.enemy[eventObjectID].objectID;
           battle.enemy[i].e = battle.enemy[eventObjectID].e;
           battle.enemy[i].scriptOnTurnStart = battle.enemy[eventObjectID].scriptOnTurnStart;
@@ -1767,7 +1767,7 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
         for (i = 0; i <= battle.maxEnemyIndex; i++) {
           if (battle.enemy[i].objectID === 0){
             //battle.resetEnemy(i);
-            memset(battle.enemy[i].uint8Array, 0);
+            memset(battle.enemy[i].uint8Array, 0, battle.enemy[i].uint8Array.length);
 
             battle.enemy[i].objectID = w;
             battle.enemy[i].e = GameData.enemy[GameData.object[w].enemy.enemyID];
