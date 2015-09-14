@@ -517,17 +517,6 @@ script_extras.init = function*(surf) {
     }
     return -1;
   };
-
-  window.BattleResult = {
-    Win: 1,
-    Lost: 0
-  }
-  window.battle = {
-    start: function*() {
-      // WARNING TODO
-      return BattleResult.Win;
-    }
-  }
 };
 
 export default script_extras;
