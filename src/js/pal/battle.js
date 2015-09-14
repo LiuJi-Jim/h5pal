@@ -15,9 +15,9 @@ global.BattleResult = {
 };
 
 global.FighterState = {
- Wait: 0,  // waiting time
- Com:  1,  // accepting command
- Act:  2   // doing the actual move
+ Wait:        0,  // waiting time
+ Com:         1,  // accepting command
+ Act:         2   // doing the actual move
 };
 
 global.BattleActionType = {
@@ -74,7 +74,6 @@ global.BattleEnemy = defineStruct(
    status|WORD*${PlayerStatus.All}
    timeMeter|FLOAT
    poisons|@PoisonStatus*${Const.MAX_POISONS}
-   lpSprite|INT
    pos|INT
    originalPos|INT
    currentFrame|WORD
@@ -113,7 +112,6 @@ global.BattlePlayer = defineStruct(
    timeMeter|FLOAT
    timeSpeedModifier|FLOAT
    hidingTime|WORD
-   lpSprite|INT
    pos|INT
    originalPos|INT
    currentFrame|WORD
@@ -126,8 +124,7 @@ global.BattlePlayer = defineStruct(
 
 global.Summon = defineStruct(
   'Summon',
-  `lpSprite|INT
-   currentFrame|WORD`
+  `currentFrame|WORD`
 );
 
 var MAX_BATTLE_ACTIONS = 256;
