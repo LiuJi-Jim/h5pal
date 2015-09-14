@@ -130,8 +130,8 @@ global.Summon = defineStruct(
    currentFrame|WORD`
 );
 
-Const.MAX_BATTLE_ACTIONS = 256;
-Const.MAX_BATTLE_ENEMIES = 256;
+var MAX_BATTLE_ACTIONS = 256;
+var MAX_BATTLE_ENEMIES = 256;
 
 global.BattlePhase = {
   SelectAction:  0,
@@ -218,7 +218,14 @@ global.Battle = defineStruct(
    flee|BOOL`
 );
 
-var battle = new Battle();
+var playerPos = [
+  [[240, 170]],                         // one player
+  [[200, 176], [256, 152]],             // two players
+  [[180, 180], [234, 170], [270, 146]]  // three players
+];
+
+var battle = {
+};
 
 var surface = null
 
@@ -227,9 +234,88 @@ battle.init = function*(surf) {
   global.battle = battle;
   surface = surf;
   yield fight.init(surf);
+
+  Global.battle = new Battle();
 };
 
-battle.start = function*() {
+/**
+ * Generate the battle scene into the scene buffer.
+ */
+battle.makeScene = function*() {
+
+};
+
+/**
+ * Backup the scene buffer.
+ */
+battle.backupScene = function() {
+
+};
+
+/**
+ * Fade in the scene of battle.
+ */
+battle.fadeScene = function*() {
+
+};
+
+/**
+ * The main battle routine.
+ * @yield {BattleResult} The result of the battle.
+ */
+battle.main = function*() {
+
+};
+
+/**
+ * Free all the loaded sprites.
+ */
+battle.freeBattleSprites = function() {
+
+};
+
+/**
+ * Load all the loaded sprites.
+ */
+battle.loadBattleSprites = function() {
+
+};
+
+/**
+ * Load the screen background picture of the battle.
+ */
+battle.loadBattleBackground = function() {
+
+};
+
+/**
+ * Show the "you win" message and add the experience points for players.
+ */
+battle.won = function*() {
+
+};
+
+/**
+ * Enemy flee the battle.
+ */
+battle.enemyEscape = function*() {
+
+};
+
+/**
+ * Player flee the battle.
+ */
+battle.playerEscape = function*() {
+
+};
+
+/**
+ * Start a battle.
+ * @param {Number}  enemyTeam     the number of the enemy team.
+ * @param {Boolean} isBoss        true for boss fight (not allowed to flee).
+ * @yield {BattleResult}  The result of the battle.
+ */
+battle.start = function*(enemyTeam, isBoss) {
   return BattleResult.Won;
 }
 
