@@ -24,15 +24,18 @@ var typeDefine = {
   'i32':    'Int32',
   'INT':    'Int32',
   'BOOL':   'Int32',
+
+  'FLOAT':  'Float32'
 };
 
 var sizeMap = {
-   'Uint8': 1,
-    'Int8': 1,
-  'Uint16': 2,
-   'Int16': 2,
-  'Uint32': 4,
-   'Int32': 4
+    'Uint8': 1,
+     'Int8': 1,
+   'Uint16': 2,
+    'Int16': 2,
+   'Uint32': 4,
+    'Int32': 4,
+  'Float32': 4
 };
 
 var LPBYTE = global.LPBYTE = Uint8Array;
