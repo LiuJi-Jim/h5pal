@@ -32,9 +32,10 @@ utils.extend(ui, {
     global.ui = ui;
     surface = surf;
     var mkfs = yield ajax.loadMKF('DATA', 'FBP');
-    var data = ui.data = new MKF(mkfs[0]);
+    var data = ui.data = ajax.MKF.DATA;
     ui.sprite = new Sprite(data.readChunk(ui.CHUNKNUM_SPRITEUI));
     ui._initNumColors();
+
     yield text.init(surf);
     yield uigame.init(surf);
     yield itemmenu.init(surf);

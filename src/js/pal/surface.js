@@ -46,12 +46,12 @@ utils.extend(Surface.prototype, {
   },
   restoreScreen: function() {
     log.trace('[VIDEO] restoreScreen');
-    if (!this._backup) return;
-    this.putRect(this._backup, 0, 0);
+    if (!this.backup) return;
+    this.putRect(this.backup, 0, 0);
   },
   backupScreen: function() {
     log.trace('[VIDEO] backupScreen');
-    this._backup = this.getRect(0, 0, this.width, this.height);
+    this.backup = this.getRect(0, 0, this.width, this.height);
   },
   updateScreen: function(rect) {
     rect = rect || new RECT(0, 0, this.width, this.height);
@@ -264,8 +264,8 @@ utils.extend(Surface.prototype, {
    * @param {int} y
    * @param {byte} pixel
    */
-  setPixel: function(x, y, pixel) {
-    var byteBuffer = this.byteBuffer,
+  setPixel: function(x, y, pixel, buf) {
+    var byteBuffer = buf || this.byteBuffer,
         palette = this.palette,
         width = this.width,
         height = this.height,
@@ -280,11 +280,11 @@ utils.extend(Surface.prototype, {
    * @param  {RECT} src
    * @param  {RECT} dst
    */
-  blitFBP: function(FBP, src, dst) {
+  blitFBP: function(FBP, src, dst, buf) {
     if (src.w <= 0 || src.h <= 0 || dst.w <= 0 || dst.h <= 0) return;
 
     this.__debugClear(dst.x, dst.y, dst.w, dst.h);
-    var byteBuffer = this.byteBuffer,
+    var byteBuffer = buf || this.byteBuffer,
         palette = this.palette;
 
     for (var i=0; i<src.h; ++i) {
@@ -304,7 +304,7 @@ utils.extend(Surface.prototype, {
    * @param  {RLE} RLE
    * @param  {POS} pos
    */
-  blitRLE: function(RLE, pos, nodebug) {
+  blitRLE: function(RLE, pos, buf, nodebug) {
     var i, j,
         x, y,
         len = 0,
@@ -313,6 +313,7 @@ utils.extend(Surface.prototype, {
         T,
         dx = PAL_X(pos),
         dy = PAL_Y(pos);
+    var byteBuffer = buf || this.byteBuffer;
     // Check for NULL pointer.
     if (!RLE) return false;
     var _RLE = RLE;
@@ -367,7 +368,7 @@ utils.extend(Surface.prototype, {
 
           // Put the pixel onto the surface (FIXME: inefficient).
           var offset = (y * this.width + x) * 4;
-          this.byteBuffer[y * this.width + x] = RLE[idx + j];
+          byteBuffer[y * this.width + x] = RLE[idx + j];
         }
         //RLE = RLE.subarray(T);
         idx += T;
@@ -387,7 +388,7 @@ utils.extend(Surface.prototype, {
    * @param  {RECT} rect
    * @param  {int} layer
    */
-  blitMap: function(map, rect, layer) {
+  blitMap: function(map, rect, layer, buf) {
     this.__debugClear(rect.x, rect.y, rect.w, rect.h);
     //console.time('blitMap');
     // Convert the coordinate
@@ -409,7 +410,7 @@ utils.extend(Surface.prototype, {
                if (layer) continue;
                bitmap = map.getTileBitmap(0, 0, 0, layer);
             }
-            this.blitRLE(bitmap, PAL_XY(xPos, yPos), true);
+            this.blitRLE(bitmap, PAL_XY(xPos, yPos), buf, true);
             if (map.isTileBlocked(x, y, h)) {
               //this.__debugRect(xPos, yPos, bitmap.width, bitmap.height, '#ccc');
               //this.__debugStr([x, y, h].join(','), xPos, yPos, '#0f0', 'top', 'left');
@@ -424,19 +425,34 @@ utils.extend(Surface.prototype, {
    * @memberOf   Surface#
    * @param  {FBP} FBP
    */
-  blit: function(FBP) {
-    var rect = {
-      x:0, y:0,
-      w:this.width, h:this.height
-    };
-    return this.blitFBP(FBP, rect, rect);
+  blit: function(FBP, buf) {
+    var rect = new RECT(0, 0, this.width, this.height);
+    return this.blitFBP(FBP, rect, rect, buf);
+  },
+  /**
+   * blit一个buffer到另一个buffer
+   * @param  {Uint8Array} src     源Buffer
+   * @param  {RECT} srcrect 源区域
+   * @param  {Uint8Array} dst     目标Buffer
+   * @param  {RECT} dstrect 目标区域
+   */
+  blitSurface: function(src, srcrect, dst, dstrect) {
+    srcrect = srcrect || new RECT(0, 0, this.width, this.height);
+    dstrect = dstrect || new RECT(0, 0, this.width, this.height);
+    for (var i=0; i<srcrect.h; ++i) {
+      var y = i + dstrect.y;
+      for (var j=0; j<srcrect.w; ++j) {
+        var x = j + dstrect.x;
+        var pixel = src[(i + srcrect.y) * srcrect.w + j + srcrect.x];
+
+        dst[y * dstrect.w + x] = pixel;
+      }
+    }
   },
   // idx: 调色板索引
   fadeIn: function*(idx, night, time) {
     log.debug(['fadeIn', idx, night, time].join(' '));
     var me = this,
-        imgdata = me.getRect(0, 0, me.width, me.height),
-        pixels = imgdata.data,
         palette = Palette.get(idx, night),
         newPalette = [];
     for (var i=0; i<256; ++i) {
@@ -447,8 +463,6 @@ utils.extend(Surface.prototype, {
       };
     }
     var me = this;
-    var imgdata = me.getRect(0, 0, me.width, me.height);
-    var pixels = imgdata.data;
     // Start fading in...
     var startTime = timestamp();
     while (true) {
@@ -487,8 +501,6 @@ utils.extend(Surface.prototype, {
       };
     }
     var me = this;
-    var imgdata = me.getRect(0, 0, me.width, me.height);
-    var pixels = imgdata.data;
     var startTime = timestamp();
     while (true) {
       var now = timestamp(),
@@ -511,6 +523,7 @@ utils.extend(Surface.prototype, {
     me.setPalette(palette, true);
   },
   paletteFade: function*(idx, night, update) {
+    debugger;
     var me = this;
 
     var newPalette = Palette.get(idx, night);
@@ -556,8 +569,6 @@ utils.extend(Surface.prototype, {
   },
   colorFade: function*(delay, color, from) {
     var me = this;
-    var imgdata = me.getRect(0, 0, me.width, me.height);
-    var pixels = imgdata.data;
     var palette = Palette.get(Global.numPalette, Global.nightPalette);
     var newPalette = [];
     var i;
@@ -576,8 +587,9 @@ utils.extend(Surface.prototype, {
           b: p.b
         };
       }
-      finalPalette = newPalette;
+      finalPalette = palette;
     } else {
+      finalPalette = new Array(256);
       for (i = 0; i < 256; ++i) {
         var p = palette[i];
         newPalette[i] = {
@@ -585,26 +597,32 @@ utils.extend(Surface.prototype, {
           g: p.g,
           b: p.b
         };
+
+        finalPalette[i] = {
+          r: palette[color].r,
+          g: palette[color].g,
+          b: palette[color].b
+        }
       }
-      finalPalette = palette;
     }
 
     for (i = 0; i < 64; i++) {
       for (j = 0; j < 256; j++) {
-        if (newPalette[j].r > palette[j].r) {
+        var to = (from ? j : color);
+
+        if (newPalette[j].r > palette[to].r) {
           newPalette[j].r -= 4;
-        } else if (newPalette[j].r < palette[j].r) {
+        } else if (newPalette[j].r < palette[to].r) {
           newPalette[j].r += 4;
         }
-        if (newPalette[j].g > palette[j].g) {
+        if (newPalette[j].g > palette[to].g) {
           newPalette[j].g -= 4;
-        } else if (newPalette[j].g < palette[j].g) {
+        } else if (newPalette[j].g < palette[to].g) {
           newPalette[j].g += 4;
         }
-
-        if (newPalette[j].b > palette[j].b) {
+        if (newPalette[j].b > palette[to].b) {
           newPalette[j].b -= 4;
-        } else if (newPalette[j].b < palette[j].b) {
+        } else if (newPalette[j].b < palette[to].b) {
           newPalette[j].b += 4;
         }
       }
@@ -613,7 +631,9 @@ utils.extend(Surface.prototype, {
       yield sleep(delay);
     }
 
-    me.setPalette(finalPalette, true);
+
+
+    me.setPalette(finalPalette);
   },
   shakeScreen: function*(a, b){
 

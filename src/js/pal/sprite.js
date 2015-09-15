@@ -41,7 +41,7 @@ utils.extend(Sprite.prototype, {
       return false;
     }
     frameNum <<= 1;
-    var offset = (this.reader.getUint16(frameNum) << 1);
+    var offset = WORD(this.reader.getUint16(frameNum) << 1);
     return offset;
   },
   /**

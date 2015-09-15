@@ -1349,9 +1349,8 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
       break;
     case 0x0076:
       script.debug('[SCRIPT] Show FBP picture');
-      // WARNING TODO
-      // ending.endingSetEffectSprite(0);
-      // showFBP(sc.operand[0], sc.operand[1]);
+      ending.setEffectSprite(0);
+      yield ending.showFBP(sc.operand[0], sc.operand[1]);
       break;
     case 0x0077:
       script.debug('[SCRIPT] Stop current playing music');
@@ -1570,7 +1569,7 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
     case 0x008B:
       script.debug('[SCRIPT] change the current palette');
       Global.numPalette = sc.operand[0];
-      if (Global.needToFadeIn) {
+      if (!Global.needToFadeIn) {
         var palette = Palette.get(Global.numPalette, false);
         surface.setPalette(palette);
       }
@@ -1644,7 +1643,7 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
       break;
     case 0x0096:
       script.debug('[SCRIPT] Show the ending animation');
-      yield ending.animation();
+      yield ending.endingAnimation();
       break;
     case 0x0097:
       script.debug('[SCRIPT] Ride the event object to the specified position, at a higher speed');
@@ -1826,8 +1825,8 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
       break;
     case 0x00A0:
       script.debug('[SCRIPT] Quit game');
-      yield script.additionalCredits();
-      return play.shutdown();
+      //yield script.additionalCredits();
+      return game.shutdown();
       break;
     case 0x00A1:
       script.debug('[SCRIPT] Set the positions of all party members to the same as the first one');
@@ -1853,12 +1852,14 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
       break;
     case 0x00A4:
       script.debug('[SCRIPT] Scroll FBP to the screen');
-      if (sc.operand[0] == 68) {
+      if (sc.operand[0] == 0x44) {
+        // 68号位图 拜月魔兽
+        // 69号位图 洪水
         // HACKHACK: to make the ending picture show correctly
-        showFBP(69, 0);
-        yield scrollFBP(sc.operand[0], sc.operand[2], true);
-      }else{
-        yield scrollFBP(sc.operand[0], sc.operand[2], sc.operand[1]);
+        yield ending.showFBP(0x45, 0);
+        yield ending.scrollFBP(sc.operand[0], sc.operand[2], true);
+      } else {
+        yield ending.scrollFBP(sc.operand[0], sc.operand[2], sc.operand[1]);
       }
       break;
     case 0x00A5:
@@ -1866,7 +1867,7 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
       if (sc.operand[1] != 0xFFFF) {
         ending.setEffectSprite(sc.operand[1]);
       }
-      showFBP(sc.operand[0], sc.operand[2]);
+      yield ending.showFBP(sc.operand[0], sc.operand[2]);
       break;
     case 0x00A6:
       script.debug('[SCRIPT] backup screen');

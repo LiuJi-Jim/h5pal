@@ -55,6 +55,16 @@ var SHORT = global.SHORT = function(x) {
   return x;
 }
 
+var WORD = global.WORD = function(x) {
+  if (x < 0) {
+    x += 0x10000;
+  }
+  if (x > 0x10000) {
+    x -= 0x10000;
+  }
+  return x;
+}
+
 var SWAP32 = global.SWAP32 = function(x) {
   return x;
 };

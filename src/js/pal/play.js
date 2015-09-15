@@ -2,6 +2,7 @@ import scene from './scene';
 import input from './input';
 import script from './script';
 import battle from './battle';
+import ending from './ending';
 
 log.trace('play module load');
 
@@ -15,6 +16,7 @@ play.init = function*(surf) {
   surface = surf;
   yield script.init(surf);
   yield battle.init(surf);
+  yield ending.init(surf);
 };
 
 /**

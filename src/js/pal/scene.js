@@ -306,7 +306,7 @@ scene.checkObstacle = function(pos, checkEventObjects, selfObject) {
   return false;
 };
 
-scene.applyWave = function(surf) {
+scene.applyWave = function(buffer) {
   var wave = new Array(32);
   Global.screenWave += Global.waveProgression;
   var buf = new Uint8Array(320);
@@ -333,7 +333,6 @@ scene.applyWave = function(surf) {
   // Apply the effect.
   // WARNING: only works with 320x200 8-bit surface.
   a = scene.applyWaveIndex;
-  var p = surf.byteBuffer;
 
   // Loop through all lines in the screen buffer.
   for (var i = 0; i < 200; i++) {
@@ -341,13 +340,13 @@ scene.applyWave = function(surf) {
 
     if (b > 0 && b < 320) {
        // Do a shift on the current line with the calculated offset.
-       memcpy(buf, p, b);
-       memmove(p, p.subarray(b), 320 - b);
-       memcpy(p.subarray(320 - b), buf, b);
+       memcpy(buf, buffer, b);
+       memmove(buffer, buffer.subarray(b), 320 - b);
+       memcpy(buffer.subarray(320 - b), buf, b);
     }
 
     a = (a + 1) % 32;
-    p = p.subarray(surf.pitch);
+    buffer = buffer.subarray(surface.pitch);
   }
 
   scene.applyWaveIndex = (scene.applyWaveIndex + 1) % 32;
@@ -582,7 +581,7 @@ utils.extend(Scene.prototype, {
     // Step 1: Draw the complete map, for both of the layers.
     this.renderMap();
     // Step 2: Apply screen waving effects.
-    scene.applyWave(surface);
+    scene.applyWave(surface.byteBuffer);
     // Step 3: Draw all the sprites.
     if (!this.drawList) this.drawList = [];
     this.drawList.length = 0;

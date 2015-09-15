@@ -207,7 +207,7 @@ game.main = function*() {
       yield game.start();
       Global.gameStart = false;
     }
-    yield res.loadResources;
+    yield res.loadResources();
     input.clear();
     yield sleep(FrameTime);
     //try {
@@ -220,7 +220,7 @@ game.main = function*() {
 };
 
 game.shutdown = function() {
-
+  console.log('over了...');
 };
 
 export default game;
