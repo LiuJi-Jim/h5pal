@@ -28,6 +28,7 @@ ending.init = function*(surf) {
  * @param  {Number} spriteNum the number of the sprite.
  */
 ending.setEffectSprite = function(spriteNum) {
+  log.debug(['ending.setEffectSprite', spriteNum].join(' '));
   curEffectSprite = spriteNum;
 };
 
@@ -37,6 +38,7 @@ ending.setEffectSprite = function(spriteNum) {
  * @param  {Number} fade     fading speed of showing the picture.
  */
 ending.showFBP = function*(chunkNum, fade) {
+  log.debug(['ending.showFBP', chunkNum, fade].join(' '));
   var indices = [0, 3, 1, 5, 2, 4];
 
   var bitmap = Files.FBP.decompressChunk(chunkNum);
@@ -46,7 +48,7 @@ ending.showFBP = function*(chunkNum, fade) {
 
   if (fade) {
     fade++;
-    fade *= 10;
+    fade *= 5; // 10;
 
     var p = surface.getRect(0, 0, 320, 200);
     surface.blit(bitmap, p);
@@ -106,6 +108,7 @@ ending.showFBP = function*(chunkNum, fade) {
  * @param {Boolean} scrollDown   true if scroll down, false if scroll up.
  */
 ending.scrollFBP = function*(chunkNum, scrollSpeed, scrollDown) {
+  log.debug(['ending.scrollFBP', chunkNum, scrollSpeed, scrollDown].join(' '));
   var bitmap = Files.FBP.decompressChunk(chunkNum);
   if (!bitmap) {
     bitmap = new Uint8Array(320 * 200);
@@ -175,11 +178,11 @@ ending.scrollFBP = function*(chunkNum, scrollSpeed, scrollDown) {
     surface.updateScreen(null);
 
     if (Global.needToFadeIn) {
-      yield surface.fadeIn(Global.numPalette, Global.nightPalette, 1 * 600);
+      yield surface.fadeIn(Global.numPalette, Global.nightPalette, 1);
       Global.needToFadeIn = false;
     }
 
-    yield sleep(800 / scrollSpeed);
+    yield sleep(400 / scrollSpeed); // sleep(800 / scrollSpeed);
   }
 
   surface.putRect(p);
@@ -189,6 +192,7 @@ ending.scrollFBP = function*(chunkNum, scrollSpeed, scrollDown) {
  * Show the ending animation.
  */
 ending.endingAnimation = function*() {
+  log.debug(['ending.endingAnimation', spriteNum].join(' '));
   var girlPos = 180;
 
   var upper = surface.getRect(0, 0, 320, 200);
@@ -246,11 +250,11 @@ ending.endingAnimation = function*() {
     surface.updateScreen(null);
 
     if (Global.needToFadeIn) {
-      yield surface.fadeIn(Global.numPalette, Global.nightPalette, 1 * 600);
+      yield surface.fadeIn(Global.numPalette, Global.nightPalette, 1);
       Global.needToFadeIn = false;
     }
 
-    yield sleep(50);
+    yield sleep(25); // sleep(50);
   }
 
   Global.screenWave = 0;

@@ -590,7 +590,7 @@ utils.extend(Scene.prototype, {
     // Check if we need to fade in.
     if (Global.needToFadeIn) {
       //surface.refresh();
-      yield surface.fadeIn(Global.numPalette, Global.nightPalette, 1 * 600);
+      yield surface.fadeIn(Global.numPalette, Global.nightPalette, 1);
       Global.needToFadeIn = false;
     }
   }

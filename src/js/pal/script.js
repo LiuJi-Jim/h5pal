@@ -1065,7 +1065,7 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
       break;
     case 0x004E:
       script.debug('[SCRIPT] Load the last saved game');
-      yield surface.fadeOut(600); // WARNING param normalize
+      yield surface.fadeOut(1);
       yield game.initGameData(Global.currentSaveSlot);
       return 0; // don't go further
     case 0x004F:
@@ -1075,14 +1075,14 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
     case 0x0050:
       script.debug('[SCRIPT] screen fade out');
       surface.updateScreen(null);
-      yield surface.fadeOut((sc.operand[0] ? sc.operand[0] : 1) * 600); // WARNING param normalize
+      yield surface.fadeOut((sc.operand[0] ? sc.operand[0] : 1));
       Global.needToFadeIn = true;
       break;
     case 0x0051:
       script.debug('[SCRIPT] screen fade in')
       surface.updateScreen(null);
       var time = SHORT(sc.operand[0]);
-      yield surface.fadeIn(Global.numPalette, Global.nightPalette, (time > 0 ? time : 1) * 600); // WARNING param normalize
+      yield surface.fadeIn(Global.numPalette, Global.nightPalette, (time > 0 ? time : 1));
       Global.needToFadeIn = false;
       break;
     case 0x0052:
@@ -1309,7 +1309,7 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
       script.debug('[SCRIPT] Fade the screen to scene');
       surface.backupScreen();
       yield scene.makeScene();
-      yield surface.fadeOut(sc.operand[0] * 600); // WARNING param normalize
+      yield surface.fadeScreen(sc.operand[0]);
       break;
     case 0x0074:
       script.debug('[SCRIPT] Jump if not all players are full HP');
@@ -1626,7 +1626,7 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
     case 0x0093:
       script.debug('[SCRIPT] Fade the screen. Update scene in the process.');
       var time = SHORT(sc.operand[0]);
-      yield surface.fadeIn(Global.numPalette, Global.nightPalette, (time > 0 ? time : 1) * 600); // WARNING param normalize
+      yield surface.fadeIn(Global.numPalette, Global.nightPalette, (time > 0 ? time : 1));
       Global.needToFadeIn = (SHORT(sc.operand[0]) < 0);
       break;
     case 0x0094:

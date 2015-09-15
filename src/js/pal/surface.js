@@ -40,6 +40,9 @@ var Surface = function(cvs, width, height, debugcvs) {
   this.clear();
 };
 
+Surface.shakeTime = 0;
+Surface.shakeLevel = 0;
+
 utils.extend(Surface.prototype, {
   init: function*() {
 
@@ -451,7 +454,7 @@ utils.extend(Surface.prototype, {
   },
   // idx: 调色板索引
   fadeIn: function*(idx, night, time) {
-    log.debug(['fadeIn', idx, night, time].join(' '));
+    log.debug(['surface.fadeIn', idx, night, time].join(' '));
     var me = this,
         palette = Palette.get(idx, night),
         newPalette = [];
@@ -462,6 +465,7 @@ utils.extend(Surface.prototype, {
         b: 0
       };
     }
+    time *= 300; // 600
     var me = this;
     // Start fading in...
     var startTime = timestamp();
@@ -487,8 +491,8 @@ utils.extend(Surface.prototype, {
     me.setPalette(palette, true);
   },
   fadeOut: function*(time) {
-    log.debug(['fadeOut', time].join(' '));
-    time /= GameSpeed;
+    log.debug(['surface.fadeOut', time].join(' '));
+    time *= 300; // 600
     var palette = this.getPalette();
     var newPalette = [];
     // Get the original palette...
@@ -523,7 +527,7 @@ utils.extend(Surface.prototype, {
     me.setPalette(palette, true);
   },
   paletteFade: function*(idx, night, update) {
-    debugger;
+    log.debug(['surface.paletteFade', idx, night, update].join(' '));
     var me = this;
 
     var newPalette = Palette.get(idx, night);
@@ -568,13 +572,14 @@ utils.extend(Surface.prototype, {
    }
   },
   colorFade: function*(delay, color, from) {
+    log.debug(['surface.colorFade', delay, color, from].join(' '));
     var me = this;
     var palette = Palette.get(Global.numPalette, Global.nightPalette);
     var newPalette = [];
     var i;
-    delay *= 10;
+    delay *= 5; // 10;
     if (delay == 0) {
-      delay = 10;
+      delay = 5; // 10;
     }
 
     var finalPalette;
@@ -635,14 +640,125 @@ utils.extend(Surface.prototype, {
 
     me.setPalette(finalPalette);
   },
-  shakeScreen: function*(a, b){
-
+  shakeScreen: function*(shakeTime, shakeLevel){
+    log.debug(['surface.shakeScreen', shakeTime, shakeLevel].join(' '));
   },
   switchScreen: function*(speed) {
-
+    log.debug(['surface.switchScreen', speed].join(' '));
   },
-  fadeScreen: function*(speed) {
 
+  /**
+   * Fade from the backup screen buffer to the current screen buffer.
+     NOTE: This will destroy the backup buffer.
+   * @param {Number} speed         speed of fading (the larger value, the slower).
+   */
+  fadeScreen: function*(speed) {
+    log.debug(['surface.fadeScreen', speed].join(' '));
+    var indices = [0, 3, 1, 5, 2, 4];
+
+    //var offset = 240 - 200;
+    //var screenRealHeight = this.height;
+    //var screenRealY = 0;
+    //if (!bScaleScreen)
+    //{
+    //  screenRealHeight -= offset;
+    //  screenRealY = offset / 2;
+    //}
+
+    speed++;
+    speed *= 4; // 10;
+
+    var screen = this.byteBuffer;
+    var p = this.getRect(0, 0, 320, 200);
+    var backup = this.backup;
+
+    for (var i = 0; i < 12; i++) {
+      for (var j = 0; j < 6; j++) {
+        // Blend the pixels in the 2 buffers, and put the result into the
+        // backup buffer
+        for (var k = indices[j]; k < this.pitch * this.height; k += 6) {
+          var a = p[k];
+          var b = backup[k];
+
+          if (i > 0) {
+            if ((a & 0x0F) > (b & 0x0F)) {
+              b++;
+            } else if ((a & 0x0F) < (b & 0x0F)) {
+              b--;
+            }
+          }
+
+          backup[k] = ((a & 0xF0) | (b & 0x0F));
+        }
+
+        // Draw the backup buffer to the screen
+        if (Surface.shakeTime != 0) {
+          var srcrect = new RECT(0, 0, 320, 200);
+          var dstrect = new RECT(0, 0, 320, 200);
+
+          // Shake the screen
+          srcrect.x = 0;
+          srcrect.y = 0;
+          srcrect.w = 320;
+          srcrect.h = 200 - Surface.shakeLevel;
+
+          dstrect.x = 0;
+          dstrect.y = 0; // screenRealY;
+          dstrect.w = 320; //320 * ~~(this.width / this.width);
+          dstrect.h = 200 - Surface.shakeLevel; // (200 - Surface.shakeLevel) * screenRealHeight / gpScreen->h;
+
+          if (Surface.shakeTime & 1) {
+            srcrect.y = Surface.shakeLevel;
+          } else {
+            dstrect.y = Surface.shakeLevel; //(screenRealY + Surface.shakeLevel) * screenRealHeight / gpScreen->h;
+          }
+
+          this.blitSurface(backup, srcrect, screen, dstrect);
+          //SDL_SoftStretch(gpScreenBak, &srcrect, gpScreenReal, &dstrect);
+
+          if (Surface.shakeTime & 1) {
+             dstrect.y = 200 - Surface.shakeLevel; // (screenRealY + screenRealHeight - Surface.shakeLevel) * screenRealHeight / gpScreen->h;
+          } else {
+             dstrect.y = 0;// screenRealY;
+          }
+
+          dstrect.h = Surface.shakeLevel; // Surface.shakeLevel * screenRealHeight / gpScreen->h;
+
+          this.fillRect(screen, dstrect, 0);
+          this.updateScreen(null);
+          //SDL_FillRect(gpScreenReal, &dstrect, 0);
+          //SDL_UpdateRect(gpScreenReal, 0, 0, gpScreenReal->w, gpScreenReal->h);
+          Surface.shakeTime--;
+        } else {
+          //dstrect.x = 0;
+          //dstrect.y = 0; //screenRealY;
+          //dstrect.w = 320; //gpScreenReal->w;
+          //dstrect.h = 200; //screenRealHeight;
+
+          this.blitSurface(backup, null, screen, null);
+          this.updateScreen(null);
+          //SDL_SoftStretch(gpScreenBak, NULL, gpScreenReal, &dstrect);
+          //SDL_UpdateRect(gpScreenReal, 0, 0, gpScreenReal->w, gpScreenReal->h);
+        }
+        yield sleep(speed);
+      }
+    }
+
+    // Draw the result buffer to the screen as the final step
+    this.updateScreen(null);
+  },
+
+  fillRect: function(buffer, rect, color) {
+    var w = rect.width,
+        h = rect.height;
+    for (var i=0; i<h; ++i) {
+      for (var j=0; j<w; ++j) {
+        var y = i + rect.y,
+            x = j + rect.x,
+            pos = y * this.width + x;
+        buffer[pos] = color;
+      }
+    }
   }
 });
 

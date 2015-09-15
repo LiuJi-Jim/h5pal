@@ -338,7 +338,7 @@ play.startFrame = function*() {
     // Quit Game
     if (yield uigame.confirmMenu()) {
       //music.play(0, false, 2);
-      yield surface.fadeOut(1200); // WARNING param normalize
+      yield surface.fadeOut(2);
       //shutdown();
 
       //PAL_PlayMUS(0, FALSE, 2);

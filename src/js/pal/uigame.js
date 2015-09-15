@@ -32,7 +32,7 @@ utils.extend(uigame, {
     yield ajax.loadMKF('FBP', 'PAT');
     var bitmap = ajax.MKF.FBP.decompressChunk(ui.MAINMENU_BACKGROUND_FBPNUM);
     surface.blit(bitmap);
-    yield surface.fadeIn(0, false, 600);
+    yield surface.fadeIn(0, false, 1);
   },
 
   /**
@@ -429,7 +429,7 @@ utils.extend(uigame, {
         }
 
         if (Global.needToFadeIn) {
-          yield surface.fadeIn(Global.numPalette, Global.nightPalette, 1 * 600);
+          yield surface.fadeIn(Global.numPalette, Global.nightPalette, 1);
           Global.needToFadeIn = false;
         }
       } else {
