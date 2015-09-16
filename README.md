@@ -50,18 +50,19 @@ h5pal
 | 资源 | 90% |
 | 读档 | 99% |
 | 存档 | 0% |
-| Surface | 85% |
+| Surface | 90% |
 | 位图 | 99% |
 | Sprite | 99% |
 | 地图 | 90% |
 | 场景 | 90% |
-| 调色盘 | 80% |
+| 调色盘 | 90% |
 | 文本 | 99% |
 | 脚本（天坑） | 50% |
 | 平常UI | 50% |
 | 战斗UI | 0% |
 | 战斗（天坑） | 0% |
 | 播片 | 90% |
+| 结局 | 95% |
 | 音乐 | 0% |
 | 音效 | 0% |
 
@@ -125,18 +126,19 @@ Eh wait, no battle system? What about encounters? `return true;` LoL.
 | Resource | 90% |
 | Loading | 99% |
 | Saving | 0% |
-| Surface | 85% |
+| Surface | 90% |
 | Bitmap | 99% |
 | Sprite | 99% |
 | Map | 90% |
 | Scene | 90% |
-| Palette | 80% |
+| Palette | 90% |
 | Text | 99% |
 | Script (OMG) | 50% |
 | Game UI | 50% |
 | Battle UI | 0% |
 | Battle (OMG) | 0% |
 | Movie | 90% |
+| Ending | 95% |
 | Music | 0% |
 | Sound | 0% |
 
