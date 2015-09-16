@@ -77,6 +77,10 @@ h5pal
 * ES6 and [babel](http://babeljs.io/)
 * ES6 [generator/yield](http://jimliu.net/2014/11/28/a-brief-look-at-es6-generator-function/) and [co](https://github.com/tj/co)
 
+## License
+
+GPL v3
+
 ## Inspired by [SDLPAL](http://sdlpal.codeplex.com)
 
 ## 结语
@@ -152,6 +156,10 @@ Eh wait, no battle system? What about encounters? `return true;` LoL.
 
 * ES6 and [babel](http://babeljs.io/)
 * ES6 [generator/yield](http://jimliu.net/2014/11/28/a-brief-look-at-es6-generator-function/) and [co](https://github.com/tj/co)
+
+## License
+
+GPL v3
 
 ## Inspired by [SDLPAL](http://sdlpal.codeplex.com)
 
