@@ -486,7 +486,7 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
       }*/
       // WARNING HACK
       var playerRole = (sc.operand[2] === 0 ? eventObjectID : (sc.operand[2] - 1));
-      var reader = new BinaryReader(playerRole.uint8Array);
+      var reader = new BinaryReader(GameData.playerRoles.uint8Array);
       var offset = (sc.operand[0] * Const.MAX_PLAYER_ROLES + playerRole) * 2;
       var val = reader.getUint16(offset) + sc.operand[1];
       reader.setUint16(offset, SHORT(val)); // WARNING setInt16??
