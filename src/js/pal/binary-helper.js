@@ -447,6 +447,9 @@ var defineStruct = global.defineStruct = function(typename, define){
       return '[object ' + typename + ']';
     };
   }
+  ctor.prototype.copy = function() {
+    return new ctor(new Uint8Array(this.uint8Array));
+  };
   return ctor;
 };
 

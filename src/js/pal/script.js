@@ -1002,7 +1002,7 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
       break;
     case 0x0045:
       script.debug('[SCRIPT] Set battle music');
-      Global.battleMusicNum = sc.operand[0];
+      Global.numBattleMusic = sc.operand[0];
       break;
     case 0x0046:
       script.debug('[SCRIPT] Set the party position on the map');
@@ -1041,7 +1041,7 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
       break;
     case 0x004A:
       script.debug('[SCRIPT] Set the current battlefield');
-      Global.battleFieldNum = sc.operand[0];
+      Global.numBattleField = sc.operand[0];
       break;
     case 0x004B:
       script.debug('[SCRIPT] Nullify the event object for a short while');
@@ -1061,7 +1061,7 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
       break;
     case 0x004D:
       script.debug('[SCRIPT] wait for any key');
-      yield input.waitForKey([]);
+      yield input.waitForKey(0);
       break;
     case 0x004E:
       script.debug('[SCRIPT] Load the last saved game');

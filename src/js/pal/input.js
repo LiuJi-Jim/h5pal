@@ -260,25 +260,15 @@ input.shutdown = function() {
  * 等待一个按键
  * @return {Promise}
  */
-input.waitForKey = function(waits) {
-  if (!Array.isArray(waits)) {
-    //waits = utils.arrClone(arguments);
-    waits = toArray(arguments);
-  }
-  return new Promise(function(resolve, reject) {
-    function onkeyup(e) {
-      var key = e.data;
-      var result = waits.length == 0 || waits.some(function(k) {
-        // wait for 0 to any key
-        return (k === 0 || k === key);
-      });
-      if (result){
-        input.off('keyup', onkeyup);
-        resolve(key);
-      }
+input.waitForKey = function*(timeout) {
+  input.clear();
+  var endtime = hrtime() + timeout;
+  while (timeout === 0 || hrtime() < endtime) {
+    if (input.isKeyPressed(Key.Search | Key.Menu)) {
+      break;
     }
-    input.on('keyup', onkeyup);
-  });
+    yield sleepByFrame(1);
+  }
 };
 
 export default input;

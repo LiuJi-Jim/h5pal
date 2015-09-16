@@ -132,12 +132,11 @@ script_extras.init = function*(surf, _script) {
   };
 
   script.clearAllPlayerStatus = function() {
-    var playerRoles = GameData.playerRoles;
-    for (var i=0; i<Const.MAX_PLAYER_ROLES; ++i) {
-      for (var j=0; j<Status.All; ++j) {
+    for (var i = 0; i < Const.MAX_PLAYER_ROLES; ++i) {
+      for (var j = 0; j < PlayerStatus.All; ++j) {
         // Don't remove effects of equipments
-        if (playerRoles[i][j] <= 999) {
-          playerRoles[i][j] = 0;
+        if (Global.playerStatus[i][j] <= 999) {
+          Global.playerStatus[i][j] = 0;
         }
       }
     }
@@ -429,7 +428,7 @@ script_extras.init = function*(surf, _script) {
   };
 
   script.getPlayerCanAttackAll = function(role) {
-    for (var i=0; i<Const.MAX_PLAYER_EQUIPMENTS; ++i) {
+    for (var i = 0; i < Const.MAX_PLAYER_EQUIPMENTS; ++i) {
       if (Global.equipmentEffect[i].attackAll[role] != 0){
         return true;
       }
@@ -440,13 +439,13 @@ script_extras.init = function*(surf, _script) {
 
   script.addMagic = function(role, magic) {
     var i;
-    for (i=0; i<Const.MAX_PLAYER_MAGICS; ++i) {
+    for (i = 0; i < Const.MAX_PLAYER_MAGICS; ++i) {
       if (GameData.playerRoles.magic[i][role] == magic) {
         // already have this magic
         return false;
       }
     }
-    for (i=0; i<Const.MAX_PLAYER_MAGICS; ++i) {
+    for (i = 0; i < Const.MAX_PLAYER_MAGICS; ++i) {
       if (GameData.playerRoles.magic[i][role] == 0) {
         break;
       }

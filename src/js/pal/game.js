@@ -81,7 +81,7 @@ game.initGlobalGameData = function*() {
   GameData.enemyTeam = readTypedArray(EnemyTeam, Files.DATA.readChunk(2));
   GameData.magic = readTypedArray(Magic, Files.DATA.readChunk(4));
   GameData.battleField = readTypedArray(BattleField, Files.DATA.readChunk(5));
-  GameData.levelUpMagic = readTypedArray(LevelUpMagic, Files.DATA.readChunk(6));
+  GameData.levelUpMagic = readTypedArray(LevelUpMagicAll, Files.DATA.readChunk(6));
   GameData.battleEffectIndex = readArray2D(
     Files.DATA.readChunk(11),
     10, 2, 2, 0
