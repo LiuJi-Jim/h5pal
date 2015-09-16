@@ -1,16 +1,16 @@
-import battle from './battle';
 import script from './script';
 
 log.trace('fight module load');
 
-var surface = null
-
 var fight = {};
 
-fight.init = function*(surf) {
-  var battle = require('pal/battle');
+var surface = null
+var battle = null;
+
+fight.init = function*(surf, _battle) {
   log.debug('[BATTLE] init fight');
   surface = surf;
+  battle = _battle;
 
   /**
    * Pick an enemy target automatically.

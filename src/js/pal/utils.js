@@ -127,6 +127,18 @@ var objClone = utils.objClone = function(obj) {
   return extend({}, obj);
 };
 
+utils.fillArray = function(arr, ctor) {
+  for (var i = 0; i < arr.length; ++i) {
+    arr[i] = (typeof ctor === 'funecion' ? new ctor() : null);
+  }
+};
+
+utils.initArray = function(ctor, len) {
+  var arr = new Array(len);
+  utils.fillArray(arr, ctor);
+  return arr;
+};
+
 /**
  * 简单的事件机制，可以将其extend到任意对象上使其获得on/off/one/fire功能
  */

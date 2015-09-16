@@ -10,7 +10,6 @@ import ajax from './ajax';
 import input from './input';
 import text from './text';
 import uigame from './uigame';
-import uibattle from './uibattle';
 import itemmenu from './itemmenu';
 
 log.trace('ui module load');
@@ -40,7 +39,6 @@ ui.init = function*(surf) {
   yield text.init(surf, ui);
   yield itemmenu.init(surf, ui);
   yield uigame.init(surf, ui);
-  yield uibattle.init(surf, ui);
 };
 
 /**
