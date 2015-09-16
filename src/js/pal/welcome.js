@@ -158,7 +158,7 @@ welcome.splashScreen = function*(surface) {
   }
 
   // Quit the splash screen
-  yield surface.fadeOut(1000);
+  yield surface.fadeOut(1);
 
   input.shutdown();
   input.clear();
