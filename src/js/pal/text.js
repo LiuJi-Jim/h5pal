@@ -6,6 +6,7 @@ import font from './font';
 import Sprite from './sprite';
 import Palette from './palette';
 import input from './input';
+import ui from './ui';
 
 log.trace('text module load');
 
@@ -72,46 +73,47 @@ function trim(buf) {
   return buf.slice(head, tail);
 }
 var textLib = {};
-utils.extend(text, {
-  init: function*(surf) {
-    global.text = ui.text = text;
-    surface = surf;
-    yield font.init(surf);
-    var list = yield ajax.load('m.msg', 'word.dat');
-    var msgBuf = new Uint8Array(list[0]), wordBuf = new Uint8Array(list[1]);
-    // Each word has 10 bytes
-    var wordCount = ~~((wordBuf.length + (WORD_LENGTH - 1)) / WORD_LENGTH);
-    textLib = {
-      msgBuf: msgBuf,
-      wordBuf: wordBuf,
-      wordCount: wordCount,
-      wordCache: {},
-      msgCache: {}/*,
-      words: new Array(wordCount)*/
-    };
-    yield ajax.loadMKF('SSS', 'DATA', 'RGM');
-    // Read the message offsets. The message offsets are in SSS.MKF #3
-    var SSS = text.SSS = ajax.MKF.SSS;
-    var DATA = text.DATA = ajax.MKF.DATA;
-    var RGM = text.RGM = ajax.MKF.RGM;
-    var chunkSSS = SSS.readChunk(3);
-    var msgOffset = textLib.msgOffset = new Uint32Array(chunkSSS.buffer, chunkSSS.byteOffset, chunkSSS.byteLength / 4);
-    var msgCount = textLib.msgCount = msgOffset.length - 1;
-    // Read the messages.
-    textLib.currentFontColor = FontColor.DEFAULT;
-    textLib.icon = 0;
-    textLib.posIcon = 0;
-    textLib.currentDialogLine = 0;
-    textLib.delayTime = 1800; // 原3
-    textLib.dialogTitlePos = PAL_XY(12, 8);
-    textLib.dialogTextPos = PAL_XY(44, 26);
-    textLib.dialogPosition = DialogPosition.Upper;
-    textLib.userSkip = false;
 
-    textLib.dialogIconsBuf = DATA.readChunk(12);
-    textLib.dialogIcons = new Sprite(textLib.dialogIconsBuf);
-  },
-  getWord: function(wordNum) {
+text.init = function*(surf) {
+  var ui = require('pal/ui');
+  global.text = text;
+  surface = surf;
+  yield font.init(surf);
+  var list = yield ajax.load('m.msg', 'word.dat');
+  var msgBuf = new Uint8Array(list[0]), wordBuf = new Uint8Array(list[1]);
+  // Each word has 10 bytes
+  var wordCount = ~~((wordBuf.length + (WORD_LENGTH - 1)) / WORD_LENGTH);
+  textLib = {
+    msgBuf: msgBuf,
+    wordBuf: wordBuf,
+    wordCount: wordCount,
+    wordCache: {},
+    msgCache: {}/*,
+    words: new Array(wordCount)*/
+  };
+  yield ajax.loadMKF('SSS', 'DATA', 'RGM');
+  // Read the message offsets. The message offsets are in SSS.MKF #3
+  var SSS = text.SSS = ajax.MKF.SSS;
+  var DATA = text.DATA = ajax.MKF.DATA;
+  var RGM = text.RGM = ajax.MKF.RGM;
+  var chunkSSS = SSS.readChunk(3);
+  var msgOffset = textLib.msgOffset = new Uint32Array(chunkSSS.buffer, chunkSSS.byteOffset, chunkSSS.byteLength / 4);
+  var msgCount = textLib.msgCount = msgOffset.length - 1;
+  // Read the messages.
+  textLib.currentFontColor = FontColor.DEFAULT;
+  textLib.icon = 0;
+  textLib.posIcon = 0;
+  textLib.currentDialogLine = 0;
+  textLib.delayTime = 1800; // 原3
+  textLib.dialogTitlePos = PAL_XY(12, 8);
+  textLib.dialogTextPos = PAL_XY(44, 26);
+  textLib.dialogPosition = DialogPosition.Upper;
+  textLib.userSkip = false;
+
+  textLib.dialogIconsBuf = DATA.readChunk(12);
+  textLib.dialogIcons = new Sprite(textLib.dialogIconsBuf);
+
+  ui.getWord = function(wordNum) {
     var buf = [],
         cache = textLib.wordCache;
     if (wordNum in cache) {
@@ -131,8 +133,9 @@ utils.extend(text, {
     buf = trim(buf);
 
     return (cache[wordNum] = buf);
-  },
-  getMsg: function(msgNum) {
+  };
+
+  ui.getMsg = function(msgNum) {
     var cache = textLib.msgCache;
     if (msgNum in cache) {
       return cache[msgNum];
@@ -149,7 +152,8 @@ utils.extend(text, {
     }
 
     return (cache[msgNum] = buf);
-  },
+  };
+
   /**
    * Draw text on the screen.
    * @param  {Uint8Array} buf
@@ -158,7 +162,7 @@ utils.extend(text, {
    * @param  {Boolean} shadow
    * @param  {Boolean} update
    */
-  drawText: function(buf, pos, color, shadow, update) {
+  ui.drawText = function(buf, pos, color, shadow, update) {
     var rect = {
       x: PAL_X(pos), y: PAL_Y(pos)
     };
@@ -206,9 +210,10 @@ utils.extend(text, {
    * Set the delay time for dialog.
    * @param {int} delay
    */
-  setDialogDelayTime: function(delay) {
+  ui.setDialogDelayTime = function(delay) {
     textLib.delayTime = delay;
-  },
+  };
+
   /**
    * Start a new dialog.
    * @param  {DialogPosition} location
@@ -217,7 +222,7 @@ utils.extend(text, {
    * @param  {Boolean} playingRNG
    * @return {Promise}
    */
-  startDialog: function(location, color, charFaceNum, playingRNG) {
+  ui.startDialog = function(location, color, charFaceNum, playingRNG) {
     log.trace('[TEXT] startDialog(%d, %d, %d, %d)', location, color, charFaceNum, playingRNG);
     var rect = RECT(0, 0, 0, 0);
 
@@ -293,12 +298,13 @@ utils.extend(text, {
     }
 
     textLib.dialogPosition = location;
-  },
+  };
+
   /**
    * 对话框等待按键（快速跳过）
    * @return {Promise}
    */
-  dialogWaitForKey: function*() {
+  ui.dialogWaitForKey = function*() {
     log.trace('[TEXT] dialogWaitForKey');
     // get the current palette
     //var palette = utils.arrClone(Global.palette);
@@ -349,13 +355,14 @@ utils.extend(text, {
     }
     input.clear();
     textLib.userSkip = false;
-  },
+  };
+
   /**
    * Show one line of the dialog text.
    * @param  {Uint8Array} buf
    * @return {Promise}
    */
-  showDialogText: function*(buf) {
+  ui.showDialogText = function*(buf) {
     var len = buf.length;
     log.trace('[TEXT] showDialogText (%d)', len);
 
@@ -371,7 +378,7 @@ utils.extend(text, {
 
     if (textLib.currentDialogLine > 3) {
       // The rest dialogs should be shown in the next page.
-      yield text.dialogWaitForKey();
+      yield ui.dialogWaitForKey();
       textLib.currentDialogLine = 0;
       //VIDEO_RestoreScreen();
       //VIDEO_UpdateScreen(NULL);
@@ -401,11 +408,11 @@ utils.extend(text, {
 
       // Show the text on the screen
       pos = PAL_XY(PAL_X(pos) + 8 + ((len & 1) << 2), PAL_Y(pos) + 10);
-      text.drawText(buf, pos, 0, false, false);
+      ui.drawText(buf, pos, 0, false, false);
       //PAL_DrawText(lpszText, pos, 0, FALSE, FALSE);
       surface.updateScreen(rect);
 
-      yield text.dialogWaitForKey();
+      yield ui.dialogWaitForKey();
 
       // Delete the box
       box.free();
@@ -413,14 +420,14 @@ utils.extend(text, {
       surface.updateScreen(rect);
 
       //PAL_EndDialog();
-      yield text.endDialog();
+      yield ui.endDialog();
     } else {
       if (textLib.currentDialogLine == 0 &&
           textLib.dialogPosition != DialogPosition.Center &&
           buf[len - 1] == 0x47 && buf[len - 2] == 0xA1) {
         // name of character
         //PAL_DrawText(lpszText, g_TextLib.posDialogTitle, FONT_COLOR_CYAN_ALT, TRUE, TRUE);
-        text.drawText(buf, textLib.dialogTitlePos, FontColor.CYAN_ALT, true, true);
+        ui.drawText(buf, textLib.dialogTitlePos, FontColor.CYAN_ALT, true, true);
       } else {
         // normal texts
         var texts = [];
@@ -495,7 +502,7 @@ utils.extend(text, {
                 texts = [buf[offset]];
                 offset++;
               }
-              text.drawText(texts, PAL_XY(x, y), textLib.currentFontColor, true, true);
+              ui.drawText(texts, PAL_XY(x, y), textLib.currentFontColor, true, true);
               x += (texts[0] & 0x80) ? 16 : 8;
               if (!textLib.userSkip) {
                 input.clear();
@@ -511,16 +518,17 @@ utils.extend(text, {
         textLib.currentDialogLine++;
       }
     }
-  },
+  };
+
   /**
    * Clear the state of the dialog.
    * @param  {Boolean} waitForKey
    * @return {Promise}
    */
-  clearDialog: function*(waitForKey) {
+  ui.clearDialog = function*(waitForKey) {
     log.trace('[TEXT] clearDialog('+!!(waitForKey)+')')
     if (textLib.currentDialogLine> 0 && waitForKey) {
-      yield text.dialogWaitForKey();
+      yield ui.dialogWaitForKey();
     }
 
     textLib.currentDialogLine = 0;
@@ -531,35 +539,38 @@ utils.extend(text, {
       textLib.currentFontColor = FontColor.DEFAULT;
       textLib.dialogPosition = DialogPosition.Upper;
     }
-  },
+  };
+
   /**
    * Ends a dialog.
    * @return {Promise}
    */
-  endDialog: function*() {
+  ui.endDialog = function*() {
     log.trace('[TEXT] endDialog');
-    yield text.clearDialog(true);
+    yield ui.clearDialog(true);
     textLib.dialogTitlePos = PAL_XY(12, 8);
     textLib.dialogTextPos = PAL_XY(44, 26);
     textLib.currentFontColor = FontColor.DEFAULT;
     textLib.dialogPosition = DialogPosition.Upper;
     textLib.userSkip = false;
     textLib.playingRNG = false;
-  },
+  };
+
   /**
    * Check if there are dialog texts on the screen.
    * @return {Boolean} true if there are dialog texts on the screen, false if not.
    */
-  isInDialog: function() {
+  ui.isInDialog = function() {
     return (textLib.currentDialogLine !== 0);
-  },
+  };
+
   /**
    * Check if the script used the RNG playing parameter when displaying texts.
    * @return {Boolean} true if the script used the RNG playing parameter, false if not.
    */
-  dialogIsPlayingRNG: function() {
+  ui.dialogIsPlayingRNG = function() {
     return textLib.playingRNG;
-  }
-});
+  };
+};
 
 export default text;

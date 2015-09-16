@@ -229,7 +229,7 @@ itemmenu.itemSelectMenu = function*(onchange, itemFlags) {
     //  }
     //  yield sleep(5);
     //}
-    yield sleep(FrameTime);
+    yield sleepByFrame(1);
 
     if (w != 0xFFFF) {
       itemmenu.noDesc = false;

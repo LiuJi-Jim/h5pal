@@ -39,10 +39,6 @@ utils.extend(ui, {
     yield text.init(surf);
     yield uigame.init(surf);
     yield itemmenu.init(surf);
-
-    'startDialog endDialog showDialogText getWord getMsg drawText setDialogDelayTime clearDialog dialogIsPlayingRNG'.split(' ').forEach(function(name){
-      ui[name] = text[name].bind(text);
-    });
   },
 
   _initNumColors: function() {
@@ -232,8 +228,8 @@ utils.extend(ui, {
   drawItemText: function(item, color, shadow, update) {
     shadow = shadow | false;
     update = update | false;
-    text.drawText(
-      text.getWord(item.wordNum),
+    ui.drawText(
+      ui.getWord(item.wordNum),
       item.pos, color, shadow, update
     );
   },

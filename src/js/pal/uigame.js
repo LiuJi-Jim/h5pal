@@ -229,7 +229,7 @@ uigame.showCash = function(cash) {
 };
 
 uigame.systemMenu_onItemChange = function(currentItem) {
-  Global.curSystemMenuItem = currentItem;
+  Global.curSystemMenuItem = currentItem - 1;
 };
 
 /**
@@ -285,10 +285,9 @@ uigame.systemMenu = function*() {
 
   var quit = function*() {
     if (yield uigame.confirmMenu()) {
-      yield music.play(0, false, 2);
+      music.play(0, false, 2);
       yield surface.fadeOut(2);
-      yield game.shutdown();
-      return;
+      game.shutdown();
     }
   };
   switch(returnValue) {
@@ -344,7 +343,7 @@ uigame.systemMenu = function*() {
       Global.noSound = !(yield uigame.switchMenu(!Global.noSound));
       break;
     case 5:
-      if (PAL_CLASSIC) {
+      if (!PAL_CLASSIC) {
         // Battle Mode
         yield uigame.battleSpeedMenu();
       } else {
