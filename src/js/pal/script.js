@@ -23,14 +23,14 @@ script.debug = function() {
   }
 }
 
-import script_helper from './script-helper';
-var traceScript = script_helper.debug;
+// import script_helper from './script-helper';
+var traceScript = function(){}; // script_helper.debug;
 
 script.init = function*(surf) {
-  log.trace('[SCRIPT] init');
+  log.debug('[SCRIPT] init');
   global.script = script;
   surface = surf;
-  yield script_extras.init(surf);
+  yield script_extras.init(surf, script);
 };
 
 /**

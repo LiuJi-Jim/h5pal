@@ -223,6 +223,7 @@ function keyboardEventFilter(evt) {
  * 初始化，并开启事件监听
  */
 input.init = function() {
+  log.debug('[INPUT] init')
   global.input = input;
   if (input.listening) return;
   input.dir = input.prevDir = Direction.Unknown;

@@ -1,5 +1,3 @@
-import script from './script';
-
 log.trace('script_extras module load');
 
 var surface = null
@@ -7,10 +5,11 @@ var abs = Math.abs;
 var floor = Math.floor;
 
 var script_extras = {};
+var script = null;
 
-script_extras.init = function*(surf) {
-  var script = require('pal/script');
-  log.trace('[Script] init extras');
+script_extras.init = function*(surf, _script) {
+  log.debug('[SCRIPT] init extras');
+  script = _script;
   surface = surf;
 
   script.updateEquipments = function*() {

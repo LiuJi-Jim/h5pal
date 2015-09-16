@@ -9,7 +9,7 @@ var fight = {};
 
 fight.init = function*(surf) {
   var battle = require('pal/battle');
-  log.trace('[BATTLE] init fight');
+  log.debug('[BATTLE] init fight');
   surface = surf;
 
   /**

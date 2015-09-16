@@ -155,6 +155,7 @@ var big5Dict = {};
  * @return {Promise}
  */
 font.init = function*(surf) {
+  log.debug('[UI] init font');
   surface = surf;
   var list = yield ajax.load('wor16.asc', 'wor16.fon');
   var charBuf = new LPWORD(list[0]), fon = new LPBYTE(list[1]);

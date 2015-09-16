@@ -45,15 +45,15 @@ Surface.shakeLevel = 0;
 
 utils.extend(Surface.prototype, {
   init: function*() {
-
+    log.debug('[VIDEO] init surface');
   },
   restoreScreen: function() {
-    log.trace('[VIDEO] restoreScreen');
+    log.debug('[VIDEO] restoreScreen');
     if (!this.backup) return;
     this.putRect(this.backup, 0, 0);
   },
   backupScreen: function() {
-    log.trace('[VIDEO] backupScreen');
+    log.debug('[VIDEO] backupScreen');
     this.backup = this.getRect(0, 0, this.width, this.height);
   },
   updateScreen: function(rect) {
@@ -454,7 +454,7 @@ utils.extend(Surface.prototype, {
   },
   // idx: 调色板索引
   fadeIn: function*(idx, night, time) {
-    log.debug(['surface.fadeIn', idx, night, time].join(' '));
+    log.debug(['[VIDEO] fadeIn', idx, night, time].join(' '));
     var me = this,
         palette = Palette.get(idx, night),
         newPalette = [];
@@ -491,7 +491,7 @@ utils.extend(Surface.prototype, {
     me.setPalette(palette, true);
   },
   fadeOut: function*(time) {
-    log.debug(['surface.fadeOut', time].join(' '));
+    log.debug(['[VIDEO] fadeOut', time].join(' '));
     time *= 300; // 600
     var palette = this.getPalette();
     var newPalette = [];
@@ -527,7 +527,7 @@ utils.extend(Surface.prototype, {
     me.setPalette(palette, true);
   },
   paletteFade: function*(idx, night, update) {
-    log.debug(['surface.paletteFade', idx, night, update].join(' '));
+    log.debug(['[VIDEO] paletteFade', idx, night, update].join(' '));
     var me = this;
 
     var newPalette = Palette.get(idx, night);
@@ -572,7 +572,7 @@ utils.extend(Surface.prototype, {
    }
   },
   colorFade: function*(delay, color, from) {
-    log.debug(['surface.colorFade', delay, color, from].join(' '));
+    log.debug(['[VIDEO] colorFade', delay, color, from].join(' '));
     var me = this;
     var palette = Palette.get(Global.numPalette, Global.nightPalette);
     var newPalette = [];
@@ -641,10 +641,10 @@ utils.extend(Surface.prototype, {
     me.setPalette(finalPalette);
   },
   shakeScreen: function*(shakeTime, shakeLevel){
-    log.debug(['surface.shakeScreen', shakeTime, shakeLevel].join(' '));
+    log.debug(['[VIDEO] shakeScreen', shakeTime, shakeLevel].join(' '));
   },
   switchScreen: function*(speed) {
-    log.debug(['surface.switchScreen', speed].join(' '));
+    log.debug(['[VIDEO] switchScreen', speed].join(' '));
   },
 
   /**
@@ -653,7 +653,7 @@ utils.extend(Surface.prototype, {
    * @param {Number} speed         speed of fading (the larger value, the slower).
    */
   fadeScreen: function*(speed) {
-    log.debug(['surface.fadeScreen', speed].join(' '));
+    log.debug(['[VIDEO] fadeScreen', speed].join(' '));
     var indices = [0, 3, 1, 5, 2, 4];
 
     //var offset = 240 - 200;

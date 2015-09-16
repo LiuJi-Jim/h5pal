@@ -50,6 +50,7 @@ function compareSprite(a, b) {
 var surface = null;
 
 scene.init = function*(surf) {
+  log.debug('[SCENE] init');
   surface = surf;
   global.scene = scene;
   var list = ['MAP', 'GOP', 'MGO'];

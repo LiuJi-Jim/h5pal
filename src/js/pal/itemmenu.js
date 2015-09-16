@@ -23,8 +23,11 @@ var itemmenu = {
 };
 
 var surface = null;
+var ui = null;
 
-itemmenu.init = function*(surf) {
+itemmenu.init = function*(surf, _ui) {
+  log.debug('[UI] init itemmenu');
+  ui = _ui;
   global.itemmenu = ui.itemmenu = itemmenu;
   surface = surf;
 };

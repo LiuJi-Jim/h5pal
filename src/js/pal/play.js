@@ -12,6 +12,7 @@ var surface = null;
 var abs = Math.abs;
 
 play.init = function*(surf) {
+  log.debug('[PLAY] init');
   global.play = play;
   surface = surf;
   yield script.init(surf);

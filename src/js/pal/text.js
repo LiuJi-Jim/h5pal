@@ -6,7 +6,6 @@ import font from './font';
 import Sprite from './sprite';
 import Palette from './palette';
 import input from './input';
-import ui from './ui';
 
 log.trace('text module load');
 
@@ -60,6 +59,7 @@ var FontColor = {
   CYAN:     0x8D,
   CYAN_ALT: 0x8C
 };
+var ui = null;
 
 function trim(buf) {
   var head = 0, tail = 0, space = ' '.charCodeAt(0);
@@ -74,8 +74,9 @@ function trim(buf) {
 }
 var textLib = {};
 
-text.init = function*(surf) {
-  var ui = require('pal/ui');
+text.init = function*(surf, _ui) {
+  log.debug('[UI] init text');
+  ui = _ui;
   global.text = text;
   surface = surf;
   yield font.init(surf);

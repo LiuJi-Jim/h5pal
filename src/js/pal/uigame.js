@@ -19,8 +19,11 @@ log.trace('uigame module load');
 var uigame = {};
 
 var surface = null;
+var ui = null;
 
-uigame.init = function*(surf) {
+uigame.init = function*(surf, _ui) {
+  log.debug('[UI] init uigame');
+  ui = _ui;
   global.uigame = ui.uigame = uigame;
   surface = surf;
 };

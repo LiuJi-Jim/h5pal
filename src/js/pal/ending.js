@@ -14,7 +14,7 @@ var curEffectSprite = 0;
 var spriteCache = {};
 
 ending.init = function*(surf) {
-  log.trace('[Ending] init');
+  log.debug('[ENDING] init');
   global.ending = ending;
   surface = surf;
   screen = surface.byteBuffer;

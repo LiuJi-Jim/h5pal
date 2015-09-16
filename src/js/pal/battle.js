@@ -227,7 +227,7 @@ var battle = {
 var surface = null
 
 battle.init = function*(surf) {
-  log.trace('[BATTLE] init');
+  log.debug('[BATTLE] init');
   global.battle = battle;
   surface = surf;
   yield fight.init(surf);
