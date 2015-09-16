@@ -1,6 +1,8 @@
 import utils from './utils';
 import scene from './scene';
-import Palette from './palette';
+import ajax from './ajax';
+import script from './script';
+import music from './music';
 import fight from './fight';
 import ui from './ui';
 import uibattle from './uibattle';
@@ -78,7 +80,7 @@ var BattleEnemy = battle.BattleEnemy = function(
   /*
     WORD               wObjectID;              // Object ID of this enemy
     ENEMY              e;                      // detailed data of this enemy
-    WORD               rgwStatus[kStatusAll];  // status effects
+    WORD               rgwStatus[PlayerStatus.All];  // status effects
     FLOAT              flTimeMeter;            // time-charging meter (0 = empty, 100 = full).
     POISONSTATUS       rgPoisons[MAX_POISONS]; // poisons
     LPSPRITE           lpSprite;
@@ -160,7 +162,7 @@ var BattlePlayer = battle.BattlePlayer = function(
   this.pos = pos || 0;
   this.originalPos = originalPos || 0;
   this.state = state || FighterState.Wait;
-  this.action = action || null;
+  this.action = action || (new BattleAction());
   this.defending = defending || false;
   this.prevHP = prevHP || 0;
   this.prevMP = prevMP || 0;
@@ -266,6 +268,10 @@ battle.init = function*(surf) {
   log.debug('[BATTLE] init');
   global.battle = battle;
   surface = surf;
+
+  yield ajax.loadMKF('DATA');
+  Files.DATA = ajax.MKF.DATA;
+
   yield fight.init(surf, battle);
   yield uibattle.init(surf, battle);
 
@@ -298,7 +304,7 @@ battle.fadeScene = function*() {
  * @yield {BattleResult} The result of the battle.
  */
 battle.main = function*() {
-
+  return BattleResult.Won;
 };
 
 /**
@@ -350,7 +356,169 @@ battle.playerEscape = function*() {
  * @yield {BattleResult}  The result of the battle.
  */
 battle.start = function*(enemyTeam, isBoss) {
-  return BattleResult.Won;
+  // Set the screen waving effects
+  prevWaveLevel = Global.screenWave;
+  prevWaveProgression = Global.waveProgression;
+
+  Global.waveProgression = 0;
+  Global.screenWave = GameData.battleField[Global.numBattleField].screenWave;
+
+  var party = Global.party;
+
+  // Make sure everyone in the party is alive, also clear all hidden
+  // EXP count records
+  for (var i = 0; i <= Global.maxPartyMemberIndex; i++) {
+    var w = party[i].playerRole;
+
+    if (GameData.playerRoles.HP[w] == 0) {
+      GameData.playerRoles.HP[w] = 1;
+      Global.playerStatus[w][PlayerStatus.Puppet] = 0;
+    }
+
+    Global.exp.healthExp[w].count = 0;
+    Global.exp.magicExp[w].count = 0;
+    Global.exp.attackExp[w].count = 0;
+    Global.exp.magicPowerExp[w].count = 0;
+    Global.exp.defenseExp[w].count = 0;
+    Global.exp.dexterityExp[w].count = 0;
+    Global.exp.fleeExp[w].count = 0;
+  }
+
+  // Clear all item-using records
+  for (var i = 0; i < Const.MAX_INVENTORY; i++) {
+    Global.inventory[i].amountInUse = 0;
+  }
+
+  // Store all enemies
+  for (var i = 0; i < Const.MAX_ENEMIES_IN_TEAM; i++) {
+    //memset(&(Global.battle.enemy[i]), 0, sizeof(BATTLEENEMY));
+    Global.battle.enemy[i] = new BattleEnemy();
+    var w = GameData.enemyTeam[enemyTeam].enemy[i];
+
+    if (w == 0xFFFF) {
+      break;
+    }
+
+    if (w != 0) {
+      Global.battle.enemy[i].e = GameData.enemy[GameData.object[w].enemy.enemyID];
+      Global.battle.enemy[i].objectID = w;
+      Global.battle.enemy[i].state = FighterState.Wait;
+      Global.battle.enemy[i].scriptOnTurnStart = GameData.object[w].enemy.scriptOnTurnStart;
+      Global.battle.enemy[i].scriptOnBattleEnd = GameData.object[w].enemy.scriptOnBattleEnd;
+      Global.battle.enemy[i].scriptOnReady = GameData.object[w].enemy.scriptOnReady;
+      Global.battle.enemy[i].colorShift = 0;
+    }
+  }
+
+  Global.battle.maxEnemyIndex = i - 1;
+
+  // Store all players
+  for (var i = 0; i <= Global.maxPartyMemberIndex; i++) {
+    Global.battle.player[i].timeMeter = 15.0;
+    Global.battle.player[i].hidingTime = 0;
+    Global.battle.player[i].state = FighterState.Wait;
+    Global.battle.player[i].action.target = -1;
+    Global.battle.player[i].defending = false;
+    Global.battle.player[i].currentFrame = 0;
+    Global.battle.player[i].colorShift = false;
+  }
+
+  // Load sprites and background
+  //PAL_LoadBattleSprites();
+  //PAL_LoadBattleBackground();
+
+  // Create the surface for scene buffer
+  Global.battle.sceneBuf = surface.getRect(0, 0, 320, 200);
+
+  yield script.updateEquipments();
+
+  Global.battle.expGained = 0;
+  Global.battle.cashGained = 0;
+
+  Global.battle.isBoss = isBoss;
+  Global.battle.enemyCleared = false;
+  Global.battle.enemyMoving = false;
+  Global.battle.hidingTime = 0;
+  Global.battle.movingPlayerIndex = 0;
+
+  Global.battle.UI.msg[0] = '\0';
+  Global.battle.UI.nextMsg[0] = '\0';
+  Global.battle.UI.msgShowTime = 0;
+  Global.battle.UI.state = BattleUIState.Wait;
+  Global.battle.UI.autoAttack = false;
+  Global.battle.UI.selectedIndex = 0;
+  Global.battle.UI.prevEnemyTarget = 0;
+
+  utils.fillArray(Global.battle.UI.showNum, uibattle.ShowNum);
+  //memset(Global.battle.UI.rgShowNum, 0, sizeof(Global.battle.UI.rgShowNum));
+
+  Global.battle.summonSprite = null;
+  Global.battle.sBackgroundColorShift = 0;
+
+  Global.inBattle = true;
+  Global.battle.BattleResult = BattleResult.PreBattle;
+
+  battle.updateFighters();
+
+  // Load the battle effect sprite.
+  Global.battle.effectSprite = Files.DATA.readChunk(10);
+
+  Global.battle.phase = BattlePhase.SelectAction;
+  Global.battle.repeat = false;
+  Global.battle.force = false;
+  Global.battle.flee = false;
+
+  //#ifdef PAL_ALLOW_KEYREPEAT
+  //SDL_EnableKeyRepeat(120, 75);
+  //#endif
+
+  // Run the main battle routine.
+  var result = yield battle.main();
+
+  //#ifdef PAL_ALLOW_KEYREPEAT
+  //SDL_EnableKeyRepeat(0, 0);
+  //PAL_ClearKeyState();
+  //g_InputState.prevdir = kDirUnknown;
+  //#endif
+
+  if (result == BattleResult.Won) {
+    // Player won the battle. Add the Experience points.
+    yield battle.won();
+  }
+
+  // Clear all item-using records
+  for (var w = 0; w < Const.MAX_INVENTORY; w++) {
+    Global.inventory[w].amountInUse = 0;
+  }
+
+  // Clear all player status, poisons and temporary effects
+  script.clearAllPlayerStatus();
+  //PAL_ClearAllPlayerStatus();
+  for (var w = 0; w < Const.MAX_PLAYER_ROLES; w++) {
+    script.curePoisonByLevel(w, 3);
+    script.removeEquipmentEffect(w, BodyPart.Extra);
+  }
+
+  // Free all the battle sprites
+  //PAL_FreeBattleSprites();
+  //free(Global.battle.lpEffectSprite);
+
+  // Free the surfaces for the background picture and scene buffer
+  //SDL_FreeSurface(Global.battle.lpBackground);
+  //SDL_FreeSurface(Global.battle.lpSceneBuf);
+
+  Global.battle.background = null;
+  Global.battle.sceneBuf = null;
+
+  Global.inBattle = false;
+
+  music.play(Global.numMusic, true, 1);
+
+  // Restore the screen waving effects
+  Global.waveProgression = prevWaveProgression;
+  Global.screenWave = prevWaveLevel;
+
+  return result;
 }
 
 export default battle;

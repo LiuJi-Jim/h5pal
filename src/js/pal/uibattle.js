@@ -83,7 +83,7 @@ uibattle.init = function*(surf, _battle) {
   surface = surf;
 };
 
-var ShowNum = function(num, pos, time, color) {
+var ShowNum = uibattle.ShowNum = function(num, pos, time, color) {
   /*
     WORD             wNum;
     PAL_POS          pos;

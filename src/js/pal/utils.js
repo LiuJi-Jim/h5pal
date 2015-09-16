@@ -129,7 +129,7 @@ var objClone = utils.objClone = function(obj) {
 
 utils.fillArray = function(arr, ctor) {
   for (var i = 0; i < arr.length; ++i) {
-    arr[i] = (typeof ctor === 'funecion' ? new ctor() : null);
+    arr[i] = (typeof ctor === 'function' ? (new ctor()) : null);
   }
 };
 

@@ -409,7 +409,7 @@ global.EnemyObject = defineStruct(
   WORD         wScriptOnReady;        // script executed when the enemy is ready
   */
   'EnemyObject',
-  'enemyId|WORD resistanceToSorcery|WORD scriptOnTurnStart|WORD scriptOnBattleEnd|WORD scriptOnReady|WORD'
+  'enemyID|WORD resistanceToSorcery|WORD scriptOnTurnStart|WORD scriptOnBattleEnd|WORD scriptOnReady|WORD'
 );
 
 global.PoisonObject = defineStruct(
@@ -565,7 +565,7 @@ global.EnemyTeam = defineStruct(
   WORD        rgwEnemy[MAX_ENEMIES_IN_TEAM];
   */
   'EnemyTeam',
-  'enemies|WORD*' + Const.MAX_ENEMIES_IN_TEAM
+  'enemy|WORD*' + Const.MAX_ENEMIES_IN_TEAM
 );
 
 global.PlayerRoles = defineStruct(
@@ -792,9 +792,9 @@ global.Experience = defineStruct(
 //    offset += n * size;
 //  });
 //};
-//AllExperience.size = 'primaryExp healthExp magciExp attackExp magicPowerExp defenceExp dexterityExp fleeExp'.split(' ');
+//AllExperience.size = 'primaryExp healthExp magciExp attackExp magicPowerExp defenseExp dexterityExp fleeExp'.split(' ');
 
-var experienceTypes = 'primaryExp healthExp magciExp attackExp magicPowerExp defenceExp dexterityExp fleeExp'.split(' ');
+var experienceTypes = 'primaryExp healthExp magicExp attackExp magicPowerExp defenseExp dexterityExp fleeExp'.split(' ');
 global.AllExperience = defineStruct(
   /*
   typedef struct tagALLEXPERIENCE

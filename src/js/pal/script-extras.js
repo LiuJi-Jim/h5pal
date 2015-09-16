@@ -131,7 +131,7 @@ script_extras.init = function*(surf, _script) {
     }
   };
 
-  script.clearPlayerStatus = function() {
+  script.clearAllPlayerStatus = function() {
     var playerRoles = GameData.playerRoles;
     for (var i=0; i<Const.MAX_PLAYER_ROLES; ++i) {
       for (var j=0; j<Status.All; ++j) {
