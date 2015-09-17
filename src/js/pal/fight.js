@@ -1,4 +1,5 @@
 import script from './script';
+import uibattle from './uibattle';
 
 log.trace('fight module load');
 
@@ -17,7 +18,22 @@ fight.init = function*(surf, _battle) {
    * @return {Number}
    */
   battle.selectAutoTarget = function() {
+    var i = Global.battle.UI.prevEnemyTarget;
 
+    if (i >= 0 && i <= Global.battle.maxEnemyIndex &&
+        Global.battle.enemy[i].objectID != 0 &&
+        Global.battle.enemy[i].e.health > 0) {
+      return i;
+    }
+
+    for (i = 0; i <= Global.battle.maxEnemyIndex; i++) {
+      if (Global.battle.enemy[i].objectID != 0 &&
+          Global.battle.enemy[i].e.health > 0) {
+        return i;
+      }
+    }
+
+    return -1;
   };
 
   /**
@@ -26,29 +42,143 @@ fight.init = function*(surf, _battle) {
    * @param {Number} objectID      The object ID to be displayed during the delay.
    * @param {Boolean} updateGesture true if update the gesture for enemies, false if not.
    */
-  battle.battleDelay = function*(duration, objectID, updateGesture) {
+  battle.delay = function*(duration, objectID, updateGesture) {
+    var sceneBuf = Global.battle.sceneBuf;
+    var screen = surface.byteByffer;
+    for (var i = 0; i < duration; i++) {
+      if (updateGesture) {
+        // Update the gesture of enemies.
+        for (var j = 0; j <= Global.battle.maxEnemyIndex; j++) {
+          var enemy = Global.battle.enemy[j];
+          if (enemy.objectID == 0 ||
+              enemy.status[PlayerStatus.Sleep] != 0 ||
+              enemy.status[PlayerStatus.Paralyzed] != 0) {
+            continue;
+          }
 
+          if (--enemy.e.idleAnimSpeed == 0) {
+            enemy.currentFrame++;
+            enemy.e.idleAnimSpeed = GameData.enemy[GameData.object[enemy.objectID].enemy.enemyID].idleAnimSpeed;
+          }
+
+          if (enemy.currentFrame >= enemy.e.idleFrames) {
+            enemy.currentFrame = 0;
+          }
+        }
+      }
+
+      yield battle.makeScene();
+      surface.BlitSurface(sceneBuf, null, screen, null);
+      uibattle.update();
+
+      if (objectID != 0) {
+        if (objectID == ui.BATTLE_LABEL_ESCAPEFAIL) {
+          // HACKHACK
+          ui.drawText(ui.getWord(objectID), PAL_XY(130, 75), 15, true, false);
+        } else if (SHORT(objectID) < 0) {
+          ui.drawText(ui.getWord(-SHORT(objectID)), PAL_XY(170, 45), ui.DESCTEXT_COLOR, true, false);
+        } else {
+          ui.drawText(ui.getWord(objectID), PAL_XY(210, 50), 15, true, false);
+        }
+      }
+
+      surface.updateScreen(null);
+
+      yield sleepByFrame(1);
+    }
   };
 
   /**
    * Update players' and enemies' gestures and locations in battle.
    */
   battle.updateFighters = function() {
+    log.trace('[BATTLE] updateFighters');
+    // Update the gesture for all players
+    for (var i = 0; i <= Global.maxPartyMemberIndex; i++) {
+      var playerRole = Global.party[i].playerRole;
 
+      Global.battle.player[i].pos = Global.battle.player[i].originalPos;
+      Global.battle.player[i].colorShift = 0;
+
+      if (GameData.playerRoles.HP[playerRole] == 0) {
+        if (Global.playerStatus[playerRole][PlayerStatus.Puppet] == 0) {
+          Global.battle.player[i].currentFrame = 2; // dead
+        } else {
+          Global.battle.player[i].currentFrame = 0; // puppet
+        }
+      } else {
+        if (Global.playerStatus[playerRole][PlayerStatus.Sleep] != 0 ||
+          battle.isPlayerDying(playerRole)) {
+          Global.battle.player[i].currentFrame = 1;
+        } else if (Global.battle.player[i].defending && !Global.battle.enemyCleared) {
+          Global.battle.player[i].currentFrame = 3;
+        } else {
+          Global.battle.player[i].currentFrame = 0;
+        }
+      }
+    }
+
+    // Update the gesture for all enemies
+    for (var i = 0; i <= Global.battle.maxEnemyIndex; i++) {
+      if (Global.battle.enemy[i].objectID == 0) {
+        continue;
+      }
+
+      Global.battle.enemy[i].pos = Global.battle.enemy[i].originalPos;
+      Global.battle.enemy[i].colorShift = 0;
+
+      if (Global.battle.enemy[i].status[PlayerStatus.Sleep] > 0 ||
+        Global.battle.enemy[i].status[PlayerStatus.Paralyzed] > 0) {
+        Global.battle.enemy[i].currentFrame = 0;
+        continue;
+      }
+
+      if (--Global.battle.enemy[i].e.idleAnimSpeed == 0)
+      {
+        Global.battle.enemy[i].currentFrame++;
+        Global.battle.enemy[i].e.idleAnimSpeed =
+          GameData.enemy[GameData.object[Global.battle.enemy[i].objectID].enemy.enemyID].idleAnimSpeed;
+      }
+
+      if (Global.battle.enemy[i].currentFrame >= Global.battle.enemy[i].e.idleFrames) {
+        Global.battle.enemy[i].currentFrame = 0;
+      }
+    }
   };
 
   /**
    * Check if there are player who is ready.
    */
   battle.playerCheckReady = function() {
+    log.trace('[BATTLE] playerCheckReady');
+    var flMax = 0;
+    var iMax = 0;
 
+    // Start the UI for the fastest and ready player
+    for (var i = 0; i <= Global.maxPartyMemberIndex; i++) {
+      if (Global.battle.player[i].state == FighterState.Com ||
+        (Global.battle.player[i].state == FighterState.Act && Global.battle.player[i].action.actionType == BattleActionType.CoopMagic)) {
+        flMax = 0;
+        break;
+      } else if (Global.battle.player[i].state == FighterState.Wait) {
+        if (Global.battle.player[i].timeMeter > flMax) {
+          iMax = i;
+          flMax = Global.battle.player[i].timeMeter;
+        }
+      }
+    }
+
+    if (flMax >= 100.0) {
+      Global.battle.player[iMax].state = FighterState.Com;
+      Global.battle.player[iMax].defending = false;
+    }
   };
 
   /**
    * Called once per video frame in battle.
    */
   battle.startFrame = function*() {
-
+    Global.battle.battleResult = BattleResult.Won;
   };
 
   /**
@@ -74,7 +204,7 @@ fight.init = function*(surf, _battle) {
    * @return {Boolean} true if the player is dying, false if not.
    */
   battle.isPlayerDying = function(playerRole) {
-
+    return GameData.playerRoles.HP[playerRole] < GameData.playerRoles.maxHP[playerRole] / 5;
   };
 
   /**
@@ -84,7 +214,14 @@ fight.init = function*(surf, _battle) {
    * @return {Number}                The base damage value of the attacking.
    */
   battle.calcBaseDamage = function(attackStrength, defense) {
-
+    // Formula courtesy of palxex and shenyanduxing
+    if (attackStrength > defense) {
+      return SHORT(~~(attackStrength * 2 - defense * 1.6 + 0.5));
+    } else if (attackStrength > defense * 0.6) {
+      return SHORT(~~(attackStrength - defense * 0.6 + 0.5));
+    } else {
+      return 0;
+    }
   };
 
   /**
@@ -97,7 +234,36 @@ fight.init = function*(surf, _battle) {
    * @return {Number}                     The damage value of the magic attack.
    */
   battle.calcMagicDamage = function(magicStrength, defense, elementalResistance, poisonResistance, magicID) {
+    magicID = GameData.object[magicID].magic.magicNumber;
 
+    // Formula courtesy of palxex and shenyanduxing
+    magicStrength *= randomFloat(10, 11);
+    magicStrength /= 10;
+
+    damage = PAL_CalcBaseDamage(magicStrength, defense);
+    damage /= 4;
+    damage += GameData.magic[magicID].baseDamage;
+
+    if (GameData.magic[magicID].elemental != 0) {
+      var elem = GameData.magic[magicID].elemental;
+
+      if (elem > Const.NUM_MAGIC_ELEMENTAL) {
+        damage *= 10 - poisonResistance;
+      } else if (elem == 0) {
+        damage *= 5;
+      } else {
+        damage *= 10 - elementalResistance[elem - 1];
+      }
+
+      damage /= 5;
+
+      if (elem <= Const.NUM_MAGIC_ELEMENTAL) {
+        damage *= 10 + GameData.battleField[Global.numBattleField].magicEffect[elem - 1];
+        damage /= 10;
+      }
+    }
+
+    return ~~damage;
   };
 
   /**
@@ -108,7 +274,12 @@ fight.init = function*(surf, _battle) {
    * @return {Number}                  The damage value of the physical attacking.
    */
   battle.calcPhysicalAttackDamage = function(attackStrength, defense, attackResistance) {
+    var damage = battle.calcBaseDamage(attackStrength, defense);
+    if (attackResistance != 0) {
+      damage = ~~(damage / attackResistance);
+    }
 
+    return damage;
   };
 
   /**
@@ -117,7 +288,11 @@ fight.init = function*(surf, _battle) {
    * @return {Number}            The dexterity value of the enemy.
    */
   battle.getEnemyDexterity = function(enemyIndex) {
+    var s = 0;
+    s = (Global.battle.enemy[enemyIndex].e.level + 6) * 3;
+    s += SHORT(Global.battle.enemy[enemyIndex].e.dexterity);
 
+    return s;
   };
 
   /**
@@ -126,14 +301,41 @@ fight.init = function*(surf, _battle) {
    * @return {Number}            The player's actual dexterity value.
    */
   battle.getPlayerActualDexterity = function(playerRole) {
+    var dexterity = script.getPlayerDexterity(playerRole);
 
+    if (Global.playerStatus[playerRole][PlayerStatus.Haste] != 0) {
+      dexterity *= 3;
+    }
+
+    if (battle.isPlayerDying(playerRole)) {
+      // player who is low of HP should be slower
+      dexterity /= 2;
+    }
+
+    if (dexterity > 999) {
+      dexterity = 999;
+    }
+
+    return ~~dexterity;
   };
 
   /**
    * Backup HP and MP values of all players and enemies.
    */
   battle.battleBackupStat = function() {
+    for (var i = 0; i <= Global.battle.maxEnemyIndex; i++) {
+      if (Global.battle.enemy[i].objectID == 0) {
+        continue;
+      }
+      Global.battle.enemy[i].prevHP = Global.battle.enemy[i].e.health;
+    }
 
+    for (var i = 0; i <= Global.maxPartyMemberIndex; i++) {
+      playerRole = Global.party[i].playerRole;
+
+      Global.battle.player[i].prevHP = GameData.playerRoles.HP[playerRole];
+      Global.battle.player[i].prevMP = GameData.playerRoles.MP[playerRole];
+    }
   };
 
   /**
@@ -141,7 +343,76 @@ fight.init = function*(surf, _battle) {
    * @return {Boolean} true if there are any number displayed, false if not.
    */
   battle.displayStatChange = function() {
+    var changed = false;
 
+    for (var i = 0; i <= Global.battle.maxEnemyIndex; i++) {
+      if (Global.battle.enemy[i].objectID == 0) {
+        continue;
+      }
+
+      if (Global.battle.enemy[i].prevHP != Global.battle.enemy[i].e.health) {
+        // Show the number of damage
+        var damage = Global.battle.enemy[i].e.health - Global.battle.enemy[i].prevHP;
+
+        var x = PAL_X(Global.battle.enemy[i].pos) - 9;
+        var y = PAL_Y(Global.battle.enemy[i].pos) - 115;
+
+        if (y < 10) {
+          y = 10;
+        }
+
+        if (damage < 0) {
+          uibattle.showNum(WORD(-damage), PAL_XY(x, y), NumColor.Blue);
+        } else {
+          uibattle.showNum(WORD(damage), PAL_XY(x, y), NumColor.Yellow);
+        }
+
+        changed = true;
+      }
+    }
+
+    for (var i = 0; i <= Global.maxPartyMemberIndex; i++) {
+      var playerRole = Global.party[i].playerRole;
+
+      if (Global.battle.player[i].prevHP != GameData.playerRoles.HP[playerRole]) {
+        var damage = GameData.playerRoles.HP[playerRole] - Global.battle.player[i].prevHP;
+
+        var x = PAL_X(Global.battle.player[i].pos) - 9;
+        var y = PAL_Y(Global.battle.player[i].pos) - 75;
+
+        if (y < 10) {
+          y = 10;
+        }
+
+        if (damage < 0) {
+          uibattle.showNum(WORD(-damage), PAL_XY(x, y), NumColor.Blue);
+        } else {
+          uibattle.showNum(WORD(damage), PAL_XY(x, y), NumColor.Yellow);
+        }
+
+        changed = true;
+      }
+
+      if (Global.battle.player[i].prevMP != GameData.playerRoles.MP[playerRole]) {
+        var damage = GameData.playerRoles.MP[playerRole] - Global.battle.player[i].prevMP;
+
+        var x = PAL_X(Global.battle.player[i].pos) - 9;
+        var y = PAL_Y(Global.battle.player[i].pos) - 67;
+
+        if (y < 10) {
+          y = 10;
+        }
+
+        // Only show MP increasing
+        if (damage > 0) {
+          uibattle.showNum(WORD(damage), PAL_XY(x, y), NumColor.Cyan);
+        }
+
+        changed = true;
+      }
+    }
+
+    return changed;
   };
 
   /**

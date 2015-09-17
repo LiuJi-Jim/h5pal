@@ -209,6 +209,18 @@ global.randomLong = function(min, max) {
 };
 
 /**
+ * 生成随机浮点数
+ *
+ * @param  {Number} min 下界（包含）
+ * @param  {Number} max 上界（不含）
+ * @return {Number}
+ */
+global.randomFloat = function(min, max) {
+  if (max <= min) return min;
+  return min + (Math.random() * (max - min));
+};
+
+/**
  * SLEEP
  *
  * @param {Number} ms

@@ -14,6 +14,7 @@ import music from './music';
 import text from './text';
 import input from './input';
 import ui from './ui';
+import itemmenu from './itemmenu';
 
 log.trace('uibattle module load');
 
@@ -84,12 +85,6 @@ uibattle.init = function*(surf, _battle) {
 };
 
 var ShowNum = uibattle.ShowNum = function(num, pos, time, color) {
-  /*
-    WORD             wNum;
-    PAL_POS          pos;
-    DWORD            dwTime;
-    NUMCOLOR         color;
-  */
   this.num = num || 0;
   this.pos = pos || 0;
   this.time = time || 0;
@@ -97,31 +92,10 @@ var ShowNum = uibattle.ShowNum = function(num, pos, time, color) {
 };
 
 var BattleUI = uibattle.BattleUI = function() {
-  /*
-    BATTLEUISTATE    state;
-    BATTLEMENUSTATE  MenuState;
-
-    CHAR             szMsg[256];           // message to be shown on the screen
-    CHAR             szNextMsg[256];       // next message to be shown on the screen
-    DWORD            dwMsgShowTime;        // the end time of showing the message
-    WORD             wNextMsgDuration;     // duration of the next message
-
-    WORD             wCurPlayerIndex;      // index of the current player
-    WORD             wSelectedAction;      // current selected action
-    WORD             wSelectedIndex;       // current selected index of player or enemy
-    WORD             wPrevEnemyTarget;     // previous enemy target
-
-    WORD             wActionType;          // type of action to be performed
-    WORD             wObjectID;            // object ID of the item or magic to use
-
-    BOOL             fAutoAttack;          // TRUE if auto attack
-
-    SHOWNUM          rgShowNum[BATTLEUI_MAX_SHOWNUM];
-  */
   this.state = BattleUIState.Wait;
-  this.MenuState = BattleMenuState.Main;
-  this.msg = utils.initArray(0, 256);
-  this.nextMsg = utils.initArray(0, 256);
+  this.menuState = BattleMenuState.Main;
+  this.msg = null;
+  this.nextMsg = null;
   this.msgShowTime = 0;
   this.nextMsgDuration = 0;
   this.curPlayerIndex = 0;
@@ -151,7 +125,37 @@ uibattle.playerInfoBox = function(pos, playerRole, timeMeter, timeMeterColor, up
  * @return {Boolean}         true if the action is valid, false if not.
  */
 uibattle.isActionValid = function(actionType) {
+  var playerRole = Global.party[Global.battle.UI.curPlayerIndex].playerRole;
 
+  switch (actionType) {
+    case BattleUIAction.Attack:
+    case BattleUIAction.Misc:
+      break;
+
+    case BattleUIAction.Magic:
+      if (Global.playerStatus[playerRole][PlayerStatus.Silence] != 0) {
+        return false;
+      }
+      break;
+
+    case BattleUIAction.CoopMagic:
+      if (Global.maxPartyMemberIndex == 0) {
+        return false;
+      }
+      for (var i = 0; i <= Global.maxPartyMemberIndex; i++) {
+        var w = Global.party[i].playerRole;
+
+        if (GameData.playerRoles.HP[w] < GameData.playerRoles.maxHP[w] / 5 ||
+            Global.playerStatus[w][PlayerStatus.Sleep] != 0 ||
+            Global.playerStatus[w][PlayerStatus.Confused] != 0 ||
+            Global.playerStatus[w][PlayerStatus.Silence] != 0) {
+          return false;
+        }
+      }
+      break;
+  }
+
+  return true;
 };
 
 /**
@@ -185,7 +189,16 @@ uibattle.miscItemSubMenuUpdate = function() {
  * @param  {Number} duration the duration of the message, in milliseconds.
  */
 uibattle.showText = function(text, duration) {
-
+  var now = hrtime();
+  if (now < Global.battle.UI.msgShowTime) {
+    // Global.battle.UI.nextMsg = utils.arrClone(text);
+    Global.battle.UI.nextMsg = text;
+    Global.battle.UI.nextMsgDuration = duration;
+  } else {
+    // Global.battle.UI.msg = utils.arrClone(text);
+    Global.battle.UI.msg = text;
+    Global.battle.UI.msgShowTime = now + duration;
+  }
 };
 
 /**
@@ -193,21 +206,56 @@ uibattle.showText = function(text, duration) {
  * @param  {Number} playerIndex the player index.
  */
 uibattle.playerReady = function(playerIndex) {
-
+  Global.battle.UI.curPlayerIndex = playerIndex;
+  Global.battle.UI.state = BattleUIState.SelectMove;
+  Global.battle.UI.selectedAction = 0;
+  Global.battle.UI.menuState = BattleMenuState.Main;
 };
 
 /**
  * Use an item in the battle UI.
  */
 uibattle.useItem = function() {
+  var selectedItem = itemmenu.itemSelectMenuUpdate();
 
+  if (selectedItem != 0xFFFF) {
+    if (selectedItem != 0) {
+      Global.battle.UI.actionType = BattleAction.UseItem;
+      Global.battle.UI.objectID = selectedItem;
+
+      if (GameData.object[selectedItem].item.flags & ItemFlag.ApplyToAll) {
+        Global.battle.UI.state = BattleUIState.SelectTargetPlayerAll;
+      } else {
+        Global.battle.UI.selectedIndex = 0;
+        Global.battle.UI.state = BattleUIState.SelectTargetPlayer;
+      }
+    } else {
+      Global.battle.UI.menuState = BattleMenuState.Main;
+    }
+  }
 };
 
 /**
  * Throw an item in the battle UI.
  */
 uibattle.throwItem = function() {
+  var selectedItem = itemmenu.itemSelectMenuUpdate();
 
+  if (selectedItem != 0xFFFF) {
+    if (selectedItem != 0) {
+      Global.battle.UI.actionType = BattleAction.ThrowItem;
+      Global.battle.UI.objectID = selectedItem;
+
+      if (GameData.object[selectedItem].item.flags & ItemFlag.ApplyToAll) {
+        Global.battle.UI.state = BattleUIState.SelectTargetEnemyAll;
+      } else {
+        Global.battle.UI.selectedIndex = Global.battle.UI.prevEnemyTarget;
+        Global.battle.UI.state = BattleUIState.SelectTargetEnemy;
+      }
+    } else {
+      Global.battle.UI.menuState = BattleMenuState.Main;
+    }
+  }
 };
 
 /**
@@ -217,7 +265,36 @@ uibattle.throwItem = function() {
  * @return {Number}             The object ID of the selected magic. 0 for physical attack.
  */
 uibattle.pickAutoMagic = function(playerRole, randomRange) {
+  var maxPower = 0;
+  if (Global.playerStatus[playerRole][PlayerStatus.Silence] != 0) {
+    return 0;
+  }
 
+  var magic = 0;
+  for (var i = 0; i < Const.MAX_PLAYER_MAGICS; i++) {
+    var w = GameData.playerRoles.magic[i][playerRole];
+    if (w == 0) {
+      continue;
+    }
+
+    var magicNum = GameData.object[w].magic.magicNumber;
+
+    // skip if the magic is an ultimate move or not enough MP
+    if (GameData.magic[magicNum].costMP == 1 ||
+        GameData.magic[magicNum].costMP > GameData.playerRoles.MP[playerRole] ||
+        SHORT(GameData.magic[magicNum].baseDamage) <= 0) {
+      continue;
+    }
+
+    var power = SHORT(GameData.magic[magicNum].baseDamage) + randomLong(0, randomRange);
+
+    if (power > maxPower) {
+      maxPower = power
+      magic = w;
+    }
+  }
+
+  return magic;
 };
 
 /**
@@ -234,7 +311,17 @@ uibattle.update = function() {
  * @param  {NumColor} color color of the number.
  */
 uibattle.showNum = function(num, pos, color) {
-
+  var ss = Global.battle.UI.showNum;
+  for (var i = 0; i < ss.length; ++i) {
+    var sn = ss[i];
+    if (sn.num == 0) {
+      sn.num = num;
+      sn.pos = PAL_XY(PAL_X(pos) - 15, PAL_Y(pos));
+      sn.color = color;
+      sn.time = hrtime();
+      break;
+    }
+  }
 };
 
 export default uibattle;

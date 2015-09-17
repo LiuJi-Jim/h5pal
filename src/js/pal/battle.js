@@ -1,6 +1,7 @@
 import utils from './utils';
 import scene from './scene';
 import ajax from './ajax';
+import Sprite from './sprite';
 import input from './input';
 import script from './script';
 import music from './music';
@@ -47,12 +48,6 @@ global.BattleActionType = {
 };
 
 var BattleAction = battle.BattleAction = function(actionType, actionID, target, remainingTime) {
-  /*
-    BATTLEACTIONTYPE   ActionType;
-    WORD               wActionID;   // item/magic to use
-    SHORT              sTarget;     // -1 for everyone
-    FLOAT              flRemainingTime;  // remaining waiting time before the action start
-  */
   this.actionType = actionType || BattleActionType.Pass;
   this.actionID = actionID || 0;
   this.target = target || 0;
@@ -78,30 +73,6 @@ var BattleEnemy = battle.BattleEnemy = function(
   scriptOnReady,
   prevHP,
   colorShift) {
-  /*
-    WORD               wObjectID;              // Object ID of this enemy
-    ENEMY              e;                      // detailed data of this enemy
-    WORD               rgwStatus[PlayerStatus.All];  // status effects
-    FLOAT              flTimeMeter;            // time-charging meter (0 = empty, 100 = full).
-    POISONSTATUS       rgPoisons[MAX_POISONS]; // poisons
-    LPSPRITE           lpSprite;
-    PAL_POS            pos;                    // current position on the screen
-    PAL_POS            posOriginal;            // original position on the screen
-    WORD               wCurrentFrame;          // current frame number
-    FIGHTERSTATE       state;                  // state of this enemy
-
-    BOOL               fTurnStart;
-    BOOL               fFirstMoveDone;
-    BOOL               fDualMove;
-
-    WORD               wScriptOnTurnStart;
-    WORD               wScriptOnBattleEnd;
-    WORD               wScriptOnReady;
-
-    WORD               wPrevHP;              // HP value prior to action
-
-    INT                iColorShift;
-  */
   this.objectID = objectID || 0;
   this.e = e || null;
   this.status = status || new Array(PlayerStatus.All);
@@ -137,24 +108,6 @@ var BattlePlayer = battle.BattlePlayer = function(
   prevHP,
   prevMP
   ) {
-  /*
-    INT                iColorShift;
-    FLOAT              flTimeMeter;          // time-charging meter (0 = empty, 100 = full).
-    FLOAT              flTimeSpeedModifier;
-    WORD               wHidingTime;          // remaining hiding time
-    LPSPRITE           lpSprite;
-    PAL_POS            pos;                  // current position on the screen
-    PAL_POS            posOriginal;          // original position on the screen
-    WORD               wCurrentFrame;        // current frame number
-    FIGHTERSTATE       state;                // state of this player
-    BATTLEACTION       action;               // action to perform
-    BOOL               fDefending;           // TRUE if player is defending
-    WORD               wPrevHP;              // HP value prior to action
-    WORD               wPrevMP;              // MP value prior to action
-  #ifndef PAL_CLASSIC
-    SHORT              sTurnOrder;           // turn order
-  #endif
-  */
   this.colorShift = colorShift || 0;
   this.timeMeter = timeMeter || 0.0;
   this.timeSpeedModifier = timeSpeedModifier || 0.0;
@@ -190,51 +143,6 @@ var ActionQueue = battle.ActionQueue = function(isEnemy, dexterity, index) {
 Const.MAX_ACTIONQUEUE_ITEMS = (Const.MAX_PLAYERS_IN_PARTY + Const.MAX_ENEMIES_IN_TEAM * 2);
 
 var Battle = battle.Battle = function() {
-  /*
-    BATTLEPLAYER     rgPlayer[MAX_PLAYERS_IN_PARTY];
-    BATTLEENEMY      rgEnemy[MAX_ENEMIES_IN_TEAM];
-
-    WORD             wMaxEnemyIndex;
-
-    SDL_Surface     *lpSceneBuf;
-    SDL_Surface     *lpBackground;
-
-    SHORT            sBackgroundColorShift;
-
-    LPSPRITE         lpSummonSprite;       // sprite of summoned god
-    PAL_POS          posSummon;
-    INT              iSummonFrame;         // current frame of the summoned god
-
-    INT              iExpGained;           // total experience value gained
-    INT              iCashGained;          // total cash gained
-
-    BOOL             fIsBoss;              // TRUE if boss fight
-    BOOL             fEnemyCleared;        // TRUE if enemies are cleared
-    BATTLERESULT     BattleResult;
-
-    FLOAT            flTimeChargingUnit;   // the base waiting time unit
-
-    BATTLEUI         UI;
-
-    LPBYTE           lpEffectSprite;
-
-    BOOL             fEnemyMoving;         // TRUE if enemy is moving
-
-    INT              iHidingTime;          // Time of hiding
-
-    WORD             wMovingPlayerIndex;   // current moving player index
-
-    int              iBlow;
-
-  #ifdef PAL_CLASSIC
-    BATTLEPHASE      Phase;
-    ACTIONQUEUE      ActionQueue[MAX_ACTIONQUEUE_ITEMS];
-    int              iCurAction;
-    BOOL             fRepeat;              // TRUE if player pressed Repeat
-    BOOL             fForce;               // TRUE if player pressed Force
-    BOOL             fFlee;                // TRUE if player pressed Flee
-  #endif
-  */
   this.player = utils.initArray(BattlePlayer, Const.MAX_PLAYERS_IN_PARTY);
   this.enemy = utils.initArray(BattleEnemy, Const.MAX_ENEMIES_IN_TEAM);
   this.maxEnemyIndex = 0;
@@ -286,21 +194,169 @@ battle.init = function*(surf) {
  * Generate the battle scene into the scene buffer.
  */
 battle.makeScene = function*() {
+  // Draw the background
+  var srcOffset = 0;
+  var dstOffset = 0;
+  var background = Global.battle.background;
+  var sceneBuf = Global.battle.sceneBuf;
 
+  for (var i = 0; i < surface.pitch * surface.height; i++) {
+    var b = background[srcOffset] & 0x0F;
+    b += Global.backgroundColorShift;
+
+    if (b & 0x80) {
+      b = 0;
+    } else if (b & 0x70) {
+      b = 0x0F;
+    }
+
+    sceneBuf[dstOffset] = (b | (background[srcOffset] & 0xF0));
+
+    ++srcOffset;
+    ++dstOffset;
+  }
+
+  scene.applyWave(sceneBuf);
+
+  // Draw the enemies
+  for (var i = Global.battle.maxEnemyIndex; i >= 0; i--) {
+    var enemy = Global.battle.enemy[i];
+    var pos = enemy.pos;
+
+    if (enemy.status[PlayerStatus.Confused] > 0 &&
+        enemy.status[PlayerStatus.Sleep] == 0 &&
+        enemy.status[PlayerStatus.Paralyzed] == 0) {
+      // Enemy is confused
+      pos = PAL_XY(PAL_X(pos) + randomLong(-1, 1), PAL_Y(pos));
+    }
+
+    var frame = enemy.sprite.getFrame(enemy.currentFrame);
+    pos = PAL_XY(PAL_X(pos) - ~~(frame.width / 2), PAL_Y(pos) - frame.height);
+
+    if (enemy.objectID != 0) {
+      if (enemy.colorShift != 0) {
+        surface.blitRLEWithColorShift(frame, pos, enemy.colorShift, sceneBuf);
+      } else {
+        surface.blitRLE(frame, pos, sceneBuf);
+      }
+    }
+  }
+
+  if (Global.battle.summonSprite) {
+    // Draw the summoned god
+    var frame = Global.battle.summonSprite.getFrame(Global.battle.summonFrame);
+    var pos = PAL_XY(
+      PAL_X(Global.battle.summonPos) - ~~(frame.width / 2),
+      PAL_Y(Global.battle.summonPos) - frame.height
+    );
+
+    surface.blitRLE(frame, pos, sceneBuf);
+  } else {
+    // Draw the players
+    for (i = Global.maxPartyMemberIndex; i >= 0; i--) {
+      var pos = Global.battle.player[i].pos;
+      var status = Global.playerStatus[Global.party[i].playerRole];
+
+      if (status[PlayerStatus.Confused] != 0 &&
+          status[PlayerStatus.Sleep] == 0 &&
+          status[PlayerStatus.Paralyzed] == 0 &&
+          GameData.playerRoles.HP[Global.party[i].playerRole] > 0) {
+        // Player is confused
+        continue;
+      }
+
+      var player = Global.battle.player[i];
+      var frame = player.sprite.getFrame(player.currentFrame);
+      pos = PAL_XY(
+        PAL_X(pos) - ~~(frame.width / 2),
+        PAL_Y(pos) - frame.height
+      );
+
+      if (player.colorShift != 0) {
+        surface.blitRLEWithColorShift(frame, pos, player.colorShift, sceneBuf);
+      } else if (Global.battle.hidingTime == 0) {
+        surface.blitRLE(frame, pos, sceneBuf);
+      }
+    }
+
+    // Confused players should be drawn on top of normal players
+    for (var i = Global.maxPartyMemberIndex; i >= 0; i--) {
+      var status = Global.playerStatus[Global.party[i].playerRole];
+      if (status[PlayerStatus.Confused] != 0 &&
+          status[PlayerStatus.Sleep] == 0 &&
+          status[PlayerStatus.Paralyzed] == 0 &&
+          GameData.playerRoles.HP[Global.party[i].playerRole] > 0) {
+        // Player is confused
+        var player = Global.battle.player[i];
+        var frame = player.sprite.getFrame(player.currentFrame);
+        var pos = PAL_XY(PAL_X(player.pos), PAL_Y(player.pos) + randomLong(-1, 1));
+        pos = PAL_XY(
+          PAL_X(pos) - ~~(frame.width / 2),
+          PAL_Y(pos) - frame.height
+        );
+
+        if (player.colorShift != 0) {
+          surface.blitRLEWithColorShift(frame, pos, player.colorShift, sceneBuf);
+        } else if (Global.battle.hidingTime == 0) {
+          surface.blitRLE(frame, pos, sceneBuf);
+        }
+      }
+    }
+  }
 };
 
 /**
  * Backup the scene buffer.
  */
 battle.backupScene = function() {
-
+  Global.battle.sceneBuf = surface.getRect(0, 0, 320, 200);
 };
 
 /**
  * Fade in the scene of battle.
  */
 battle.fadeScene = function*() {
+  var indices = [0, 3, 1, 5, 2, 4];
 
+  time = SDL_GetTicks();
+  var backup = surface.backup;
+  var screen = surface.byteBuffer;
+
+  for (var i = 0; i < 12; i++) {
+    for (var j = 0; j < 6; j++) {
+      // Blend the pixels in the 2 buffers, and put the result into the
+      // backup buffer
+      for (var k = indices[j]; k < surface.pitch * surface.height; k += 6) {
+        var a = Global.battle.sceneBuf[k];
+        var b = backup[k];
+
+        if (i > 0) {
+          if ((a & 0x0F) > (b & 0x0F))
+          {
+            b++;
+          }
+          else if ((a & 0x0F) < (b & 0x0F)) {
+            b--;
+          }
+        }
+
+        backup[k] = ((a & 0xF0) | (b & 0x0F));
+      }
+
+      // Draw the backup buffer to the screen
+      surface.blitSurface(backup, null, screen, null);
+
+      uibattle.update();
+      surface.updateScreen(null);
+
+      yield sleep(8); // 16
+    }
+  }
+
+  // Draw the result buffer to the screen as the final step
+  surface.blitSurface(Global.battle.sceneBuf, null, screen, null);
+  uibattle.update();
+  surface.updateScreen(null);
 };
 
 /**
@@ -308,14 +364,82 @@ battle.fadeScene = function*() {
  * @yield {BattleResult} The result of the battle.
  */
 battle.main = function*() {
-  return BattleResult.Won;
+  surface.backupScreen();
+  var screen = surface.byteBuffer;
+  var sceneBuf = Global.battle.sceneBuf;
+
+  // Generate the scene and draw the scene to the screen buffer
+  yield battle.makeScene();
+  surface.blitSurface(sceneBuf, null, screen, null);
+
+  // Fade out the music and delay for a while
+  music.play(0, false, 1);
+  yield sleep(100); // 200
+
+  // Switch the screen
+  yield surface.switchScreen(5);
+
+  // Play the battle music
+  music.play(Global.numBattleMusic, true, 0);
+
+  // Fade in the screen when needed
+  if (Global.needToFadeIn) {
+    yield surface.fadeIn(Global.numPalette, Global.nightPalette, 1);
+    Global.needToFadeIn = false;
+  }
+
+  // Run the pre-battle scripts for each enemies
+  for (var i = 0; i <= Global.battle.maxEnemyIndex; i++) {
+    Global.battle.enemy[i].scriptOnTurnStart =
+      yield script.runTriggerScript(Global.battle.enemy[i].scriptOnTurnStart, i);
+
+    if (Global.battle.battleResult != BattleResult.PreBattle) {
+      break;
+    }
+  }
+
+  if (Global.battle.battleResult == BattleResult.PreBattle) {
+    Global.battle.battleResult = BattleResult.OnGoing;
+  }
+
+  input.clear();
+
+  // Run the main battle loop.
+  while (true) {
+    // Break out if the battle ended.
+    if (Global.battle.battleResult != BattleResult.OnGoing) {
+      break;
+    }
+
+    // Run the main frame routine.
+    yield battle.startFrame();
+
+    // Update the screen.
+    surface.updateScreen(null);
+
+    yield sleepByFrame(1);
+  }
+
+  // Return the battle result
+  return Global.battle.battleResult;
 };
 
 /**
  * Free all the loaded sprites.
  */
 battle.freeBattleSprites = function() {
+  log.debug('[BATTLE] freeBattleSprites');
+  // Free all the loaded sprites
+  for (var i = 0; i <= Global.maxPartyMemberIndex; i++)
+  {
+    Global.battle.player[i].sprite = null;
+  }
 
+  for (var i = 0; i <= Global.battle.maxEnemyIndex; i++) {
+    Global.battle.enemy[i].sprite = null;
+  }
+
+  Global.battle.summonSprite = null;
 };
 
 /**
@@ -324,6 +448,7 @@ battle.freeBattleSprites = function() {
  * @return {Number}            Number of the player's battle sprite.
  */
 battle.getPlayerBattleSprite = function(playerRole) {
+  log.trace(['[BATTLE] getPlayerBattleSprite', playerRole].join(' '));
   var w = GameData.playerRoles.spriteNumInBattle[playerRole];
 
   for (var i = 0; i <= Const.MAX_PLAYER_EQUIPMENTS; i++) {
@@ -339,13 +464,14 @@ battle.getPlayerBattleSprite = function(playerRole) {
  * Load all the loaded sprites.
  */
 battle.loadBattleSprites = function() {
+  log.debug('[BATTLE] loadBattleSprites');
   battle.freeBattleSprites();
 
   // Load battle sprites for players
   for (var i = 0; i <= Global.maxPartyMemberIndex; i++) {
     var s = battle.getPlayerBattleSprite(Global.party[i].playerRole);
 
-    Global.battle.player[i].sprite = Files.F.decompressChunk(s);
+    Global.battle.player[i].sprite = new Sprite(Files.F.decompressChunk(s));
 
     // Set the default position for this player
     //
@@ -363,7 +489,7 @@ battle.loadBattleSprites = function() {
     }
 
     var enemyID = GameData.object[Global.battle.enemy[i].objectID].enemy.enemyID
-    Global.battle.enemy[i].sprite = Files.ABC.decompressChunk(enemyID);
+    Global.battle.enemy[i].sprite = new Sprite(Files.ABC.decompressChunk(enemyID));
 
     // Set the default position for this enemy
     var x = GameData.enemyPos.pos[i][Global.battle.maxEnemyIndex].x;
@@ -380,8 +506,9 @@ battle.loadBattleSprites = function() {
  * Load the screen background picture of the battle.
  */
 battle.loadBattleBackground = function() {
+  log.debug('[BATTLE] loadBattleBackground');
   // Create the surface
-  var background = surface.getRect(0, 0320, 200);
+  var background = surface.getRect(0, 0, 320, 200);
   Global.battle.background = background;
 
   // Load the picture
@@ -399,7 +526,7 @@ battle.won = function*() {
   var rect1 = new RECT(80, 0, 180, 200);
 
   // Backup the initial player stats
-  var origPlayerRoles = GameData.playerRoles.copy();
+  var origplayerRoles = GameData.playerRoles.copy();
 
   if (Global.battle.expGained > 0) {
     // Play the "battle win" music
@@ -477,40 +604,40 @@ battle.won = function*() {
       ui.drawText(ui.getWord(ui.STATUS_LABEL_FLEERATE), PAL_XY(100, 170), ui.BATTLEWIN_LEVELUP_LABEL_COLOR, true, false);
 
       // Draw the original stats and stats after level up
-      ui.drawNumber(origPlayerRoles.level[w], 4, PAL_XY(133, 47), NumColor.Yellow, NumAlign.Right);
+      ui.drawNumber(origplayerRoles.level[w], 4, PAL_XY(133, 47), NumColor.Yellow, NumAlign.Right);
       ui.drawNumber(GameData.playerRoles.level[w], 4, PAL_XY(195, 47), NumColor.Yellow, NumAlign.Right);
 
-      ui.drawNumber(origPlayerRoles.HP[w], 4, PAL_XY(133, 64), NumColor.Yellow, NumAlign.Right);
-      ui.drawNumber(origPlayerRoles.maxHP[w], 4, PAL_XY(154, 68), NumColor.Blue, NumAlign.Right);
+      ui.drawNumber(origplayerRoles.HP[w], 4, PAL_XY(133, 64), NumColor.Yellow, NumAlign.Right);
+      ui.drawNumber(origplayerRoles.maxHP[w], 4, PAL_XY(154, 68), NumColor.Blue, NumAlign.Right);
       surface.blitRLE(ui.sprite.getFrame(ui.SPRITENUM_SLASH), PAL_XY(156, 66));
       ui.drawNumber(GameData.playerRoles.HP[w], 4, PAL_XY(195, 64), NumColor.Yellow, NumAlign.Right);
       ui.drawNumber(GameData.playerRoles.maxHP[w], 4, PAL_XY(216, 68), NumColor.Blue, NumAlign.Right);
       surface.blitRLE(ui.sprite.getFrame(ui.SPRITENUM_SLASH), PAL_XY(218, 66));
 
-      ui.drawNumber(origPlayerRoles.MP[w], 4, PAL_XY(133, 82), NumColor.Yellow, NumAlign.Right);
-      ui.drawNumber(origPlayerRoles.maxMP[w], 4, PAL_XY(154, 86), NumColor.Blue, NumAlign.Right);
+      ui.drawNumber(origplayerRoles.MP[w], 4, PAL_XY(133, 82), NumColor.Yellow, NumAlign.Right);
+      ui.drawNumber(origplayerRoles.maxMP[w], 4, PAL_XY(154, 86), NumColor.Blue, NumAlign.Right);
       surface.blitRLE(ui.sprite.getFrame(ui.SPRITENUM_SLASH), PAL_XY(156, 84));
       ui.drawNumber(GameData.playerRoles.MP[w], 4, PAL_XY(195, 82), NumColor.Yellow, NumAlign.Right);
       ui.drawNumber(GameData.playerRoles.maxMP[w], 4, PAL_XY(216, 86), NumColor.Blue, NumAlign.Right);
       surface.blitRLE(ui.sprite.getFrame(ui.SPRITENUM_SLASH), PAL_XY(218, 84));
 
-      ui.drawNumber(origPlayerRoles.attackStrength[w] + script.getPlayerAttackStrength(w) - GameData.playerRoles.attackStrength[w],
+      ui.drawNumber(origplayerRoles.attackStrength[w] + script.getPlayerAttackStrength(w) - GameData.playerRoles.attackStrength[w],
         4, PAL_XY(133, 101), NumColor.Yellow, NumAlign.Right);
       ui.drawNumber(script.getPlayerAttackStrength(w), 4, PAL_XY(195, 101), NumColor.Yellow, NumAlign.Right);
 
-      ui.drawNumber(origPlayerRoles.magicStrength[w] + script.getPlayerMagicStrength(w) - GameData.playerRoles.magicStrength[w],
+      ui.drawNumber(origplayerRoles.magicStrength[w] + script.getPlayerMagicStrength(w) - GameData.playerRoles.magicStrength[w],
         4, PAL_XY(133, 119), NumColor.Yellow, NumAlign.Right);
       ui.drawNumber(script.getPlayerMagicStrength(w), 4, PAL_XY(195, 119), NumColor.Yellow, NumAlign.Right);
 
-      ui.drawNumber(origPlayerRoles.defense[w] + script.getPlayerDefense(w) - GameData.playerRoles.defense[w],
+      ui.drawNumber(origplayerRoles.defense[w] + script.getPlayerDefense(w) - GameData.playerRoles.defense[w],
         4, PAL_XY(133, 137), NumColor.Yellow, NumAlign.Right);
       ui.drawNumber(script.getPlayerDefense(w), 4, PAL_XY(195, 137), NumColor.Yellow, NumAlign.Right);
 
-      ui.drawNumber(origPlayerRoles.dexterity[w] + script.getPlayerDexterity(w) - GameData.playerRoles.dexterity[w],
+      ui.drawNumber(origplayerRoles.dexterity[w] + script.getPlayerDexterity(w) - GameData.playerRoles.dexterity[w],
         4, PAL_XY(133, 155), NumColor.Yellow, NumAlign.Right);
       ui.drawNumber(script.getPlayerDexterity(w), 4, PAL_XY(195, 155), NumColor.Yellow, NumAlign.Right);
 
-      ui.drawNumber(origPlayerRoles.fleeRate[w] + script.getPlayerFleeRate(w) - GameData.playerRoles.fleeRate[w],
+      ui.drawNumber(origplayerRoles.fleeRate[w] + script.getPlayerFleeRate(w) - GameData.playerRoles.fleeRate[w],
         4, PAL_XY(133, 173), NumColor.Yellow, NumAlign.Right);
       ui.drawNumber(script.getPlayerFleeRate(w), 4, PAL_XY(195, 173), NumColor.Yellow, NumAlign.Right);
 
@@ -518,7 +645,7 @@ battle.won = function*() {
       surface.updateScreen(rect1);
       yield input.waitForKey(3000);
 
-      origPlayerRoles = GameData.playerRoles.copy();
+      origplayerRoles = GameData.playerRoles.copy();
     }
 
     // Increasing of other hidden levels
@@ -555,12 +682,12 @@ battle.won = function*() {
 
         Global.exp[expname][w].exp = WORD(exp);
 
-        if (GameData.playerRoles[statname][w] != origPlayerRoles[statname][w]) {
+        if (GameData.playerRoles[statname][w] != origplayerRoles[statname][w]) {
           ui.createSingleLineBox(PAL_XY(83, 60), 8, false);
           ui.drawText(ui.getWord(GameData.playerRoles.name[w]), PAL_XY(95, 70), 0, false, false);
           ui.drawText(ui.getWord(label), PAL_XY(143, 70), 0, false, false);
           ui.drawText(ui.getWord(ui.BATTLEWIN_LEVELUP_LABEL), PAL_XY(175, 70), 0, false, false);
-          ui.drawNumber(GameData.playerRoles[statname][w] - origPlayerRoles[statname][w], 5, PAL_XY(188, 74), NumColor.Yellow, NumAlign.Right);
+          ui.drawNumber(GameData.playerRoles[statname][w] - origplayerRoles[statname][w], 5, PAL_XY(188, 74), NumColor.Yellow, NumAlign.Right);
 
           surface.updateScreen(rect);
           yield input.waitForKey(3000);
@@ -631,6 +758,7 @@ battle.playerEscape = function*() {
  * @yield {BattleResult}  The result of the battle.
  */
 battle.start = function*(enemyTeam, isBoss) {
+  log.debug(['[BATTLE] start', enemyTeam, isBoss].join(' '));
   // Set the screen waving effects
   prevWaveLevel = Global.screenWave;
   prevWaveProgression = Global.waveProgression;
@@ -716,22 +844,28 @@ battle.start = function*(enemyTeam, isBoss) {
   Global.battle.hidingTime = 0;
   Global.battle.movingPlayerIndex = 0;
 
-  Global.battle.UI.msg[0] = '\0';
-  Global.battle.UI.nextMsg[0] = '\0';
+  Global.battle.UI.msg = [];
+  Global.battle.UI.nextMsg = [];
   Global.battle.UI.msgShowTime = 0;
   Global.battle.UI.state = BattleUIState.Wait;
   Global.battle.UI.autoAttack = false;
   Global.battle.UI.selectedIndex = 0;
   Global.battle.UI.prevEnemyTarget = 0;
 
-  utils.fillArray(Global.battle.UI.showNum, uibattle.ShowNum);
+  //utils.fillArray(Global.battle.UI.showNum, uibattle.ShowNum);
   //memset(Global.battle.UI.rgShowNum, 0, sizeof(Global.battle.UI.rgShowNum));
+  Global.battle.UI.showNum.forEach(function(sn, i) {
+    sn.num = 0;
+    sn.pos = 0;
+    sn.time = 0;
+    sn.color = NumColor.Yellow;
+  });
 
   Global.battle.summonSprite = null;
   Global.battle.sBackgroundColorShift = 0;
 
   Global.inBattle = true;
-  Global.battle.BattleResult = BattleResult.PreBattle;
+  Global.battle.battleResult = BattleResult.PreBattle;
 
   battle.updateFighters();
 

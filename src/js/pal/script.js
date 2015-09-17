@@ -3,6 +3,7 @@ import Palette from './palette';
 import script_extras from './script-extras';
 import res from './res';
 import rng from './rng';
+import music from './music';
 
 log.trace('script module load');
 
@@ -624,14 +625,14 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
       script.debug('[SCRIPT] Inflict damage to the enemy');
       if (sc.operand[0]) {
         // Inflict damage to all enemies
-        for (i = 0; i <= battle.maxEnemyIndex; i++) {
-          if (battle.enemy[i].objectID != 0) {
-            battle.enemy[i].e.health -= sc.operand[1];
+        for (i = 0; i <= Global.battle.maxEnemyIndex; i++) {
+          if (Global.battle.enemy[i].objectID != 0) {
+            Global.battle.enemy[i].e.health -= sc.operand[1];
           }
         }
       } else {
         // Inflict damage to one enemy
-        battle.enemy[eventObjectID].e.health -= sc.operand[1];
+        Global.battle.enemy[eventObjectID].e.health -= sc.operand[1];
       }
       break;
     case 0x0022:
@@ -712,23 +713,23 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
       script.debug('[SCRIPT] Apply poison to enemy');
       if (sc.operand[0]) {
         // Apply to everyone
-        for (i = 0; i <= battle.maxEnemyIndex; i++) {
-          w = battle.enemy[i].objectID;
+        for (i = 0; i <= Global.battle.maxEnemyIndex; i++) {
+          w = Global.battle.enemy[i].objectID;
           if (w === 0) {
             continue;
           }
           if (randomLong(0, 9) >= GameData.object[w].enemy.resistanceToSorcery) {
             for (j = 0; j < Const.MAX_POISONS; j++) {
-              if (battle.enemy[i].poisons[j].poisonID === sc.operand[1]){
+              if (Global.battle.enemy[i].poisons[j].poisonID === sc.operand[1]){
                 break;
               }
             }
             if (j >= Const.MAX_POISONS) {
               for (j = 0; j < Const.MAX_POISONS; j++) {
-                if (battle.enemy[i].poisons[j].poisonID === 0) {
-                  battle.enemy[i].poisons[j].poisonID = sc.operand[1];
+                if (Global.battle.enemy[i].poisons[j].poisonID === 0) {
+                  Global.battle.enemy[i].poisons[j].poisonID = sc.operand[1];
                   var ret = yield script.runTriggerScript(GameData.object[sc.operand[1]].poison.enemyScript, eventObjectID);
-                  battle.enemy[i].poisons[j].poisonScript = ret;
+                  Global.battle.enemy[i].poisons[j].poisonScript = ret;
                   break;
                 }
               }
@@ -737,19 +738,19 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
         }
       } else {
         // Apply to one enemy
-        w = battle.enemy[eventObjectID].objectID;
+        w = Global.battle.enemy[eventObjectID].objectID;
         if (randomLong(0, 9) >= GameData.object[w].enemy.resistanceToSorcery) {
           for (j = 0; j < Const.MAX_POISONS; j++) {
-            if (battle.enemy[eventObjectID].poisons[j].poisonID == sc.operand[1]) {
+            if (Global.battle.enemy[eventObjectID].poisons[j].poisonID == sc.operand[1]) {
               break;
             }
           }
           if (j >= Const.MAX_POISONS) {
             for (j = 0; j < Const.MAX_POISONS; j++) {
-              if (battle.enemy[eventObjectID].poisons[j].poisonID == 0) {
-                battle.enemy[eventObjectID].poisons[j].poisonID = sc.operand[1];
+              if (Global.battle.enemy[eventObjectID].poisons[j].poisonID == 0) {
+                Global.battle.enemy[eventObjectID].poisons[j].poisonID = sc.operand[1];
                 var ret = yield script.runTriggerScript(GameData.object[sc.operand[1]].poison.enemyScript, eventObjectID);
-                battle.enemy[eventObjectID].poisons[j].poisonScript = ret;
+                Global.battle.enemy[eventObjectID].poisons[j].poisonScript = ret;
                 break;
               }
             }
@@ -778,14 +779,14 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
       script.debug('[SCRIPT] Cure poison by object ID for enemy');
       if (sc.operand[0]) {
         // Apply to all enemies
-        for (i = 0; i <= battle.maxEnemyIndex; i++) {
-          if (battle.enemy[i].objectID === 0){
-             continue;
+        for (i = 0; i <= Global.battle.maxEnemyIndex; i++) {
+          if (Global.battle.enemy[i].objectID === 0){
+            continue;
           }
           for (j = 0; j < Const.MAX_POISONS; j++) {
-            if (battle.enemy[i].poisons[j].poisonID === sc.operand[1]) {
-              battle.enemy[i].poisons[j].poisonID = 0;
-              battle.enemy[i].poisons[j].poisonScript = 0;
+            if (Global.battle.enemy[i].poisons[j].poisonID === sc.operand[1]) {
+              Global.battle.enemy[i].poisons[j].poisonID = 0;
+              Global.battle.enemy[i].poisons[j].poisonScript = 0;
               break;
             }
           }
@@ -793,9 +794,9 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
       } else {
         // Apply to one enemy
         for (j = 0; j < Const.MAX_POISONS; j++) {
-          if (battle.enemy[eventObjectID].poisons[j].poisonID == sc.operand[1]) {
-            battle.enemy[eventObjectID].poisons[j].poisonID = 0;
-            battle.enemy[eventObjectID].poisons[j].poisonScript = 0;
+          if (Global.battle.enemy[eventObjectID].poisons[j].poisonID == sc.operand[1]) {
+            Global.battle.enemy[eventObjectID].poisons[j].poisonID = 0;
+            Global.battle.enemy[eventObjectID].poisons[j].poisonScript = 0;
             break;
           }
         }
@@ -829,15 +830,15 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
       break;
     case 0x002E:
       script.debug('[SCRIPT] Set the status for enemy');
-      w = battle.enemy[eventObjectID].objectID;
+      w = Global.battle.enemy[eventObjectID].objectID;
       if (PAL_CLASSIC) {
         i = 9;
       } else {
         i = ((sc.operand[0] === PlayerStatus.Slow) ? 14 : 9);
       }
       if (randomLong(0, i) >= GameData.object[w].enemy.resistanceToSorcery &&
-          battle.enemy[eventObjectID].status[sc.operand[0]] === 0) {
-        battle.enemy[eventObjectID].status[sc.operand[0]] = sc.operand[1];
+          Global.battle.enemy[eventObjectID].status[sc.operand[0]] === 0) {
+        Global.battle.enemy[eventObjectID].status[sc.operand[0]] = sc.operand[1];
       } else {
         scriptEntry = sc.operand[2] - 1;
       }
@@ -883,8 +884,8 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
       break;
     case 0x0033:
       script.debug('[SCRIPT] collect the enemy for items');
-      if (battle.enemy[eventObjectID].e.collectValue !== 0) {
-        Global.collectValue += battle.enemy[eventObjectID].e.collectValue;
+      if (Global.battle.enemy[eventObjectID].e.collectValue !== 0) {
+        Global.collectValue += Global.battle.enemy[eventObjectID].e.collectValue;
       } else {
         scriptEntry = sc.operand[0] - 1;
       }
@@ -951,8 +952,8 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
       break;
     case 0x0039:
       script.debug('[SCRIPT] Drain HP from enemy');
-      w = Global.party[battle.movingPlayerIndex].playerRole;
-      battle.enemy[eventObjectID].e.health -= sc.operand[0];
+      w = Global.party[Global.battle.movingPlayerIndex].playerRole;
+      Global.battle.enemy[eventObjectID].e.health -= sc.operand[0];
       GameData.playerRoles.HP[w] += sc.operand[0];
       if (GameData.playerRoles.HP[w] > GameData.playerRoles.maxHP[w]) {
          GameData.playerRoles.HP[w] = GameData.playerRoles.maxHP[w];
@@ -960,7 +961,7 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
       break;
     case 0x003A:
       script.debug('[SCRIPT] Player flee from the battle');
-      if (battle.isBoss) {
+      if (Global.battle.isBoss) {
         // Cannot flee from bosses
         scriptEntry = sc.operand[0] - 1;
       } else {
@@ -987,14 +988,12 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
       if (i < 0) {
         i = eventObjectID;
       }
-      // WARNING TODO
-      // yield fight.battleSimulateMagic(i, sc.operand[0], sc.operand[1]);
+      yield battle.battleSimulateMagic(i, sc.operand[0], sc.operand[1]);
       break;
     case 0x0043:
       script.debug('[SCRIPT] Set background music');
       Global.musicNum = sc.operand[0];
-      // WARNING TODO
-      // yield music.play(sc.operand[0], (sc.operand[0] != 0x3D), sc.operand[1]);
+      music.play(sc.operand[0], (sc.operand[0] != 0x3D), sc.operand[1]);
       break;
     case 0x0044:
       script.debug('[SCRIPT] Ride the event object to the specified position, at the normal speed');
@@ -1148,16 +1147,16 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
       break;
     case 0x005B:
       script.debug('[SCRIPT] Halve the enemy\'s HP');
-      w = ~~(battle.enemy[eventObjectID].e.health / 2) + 1;
+      w = ~~(Global.battle.enemy[eventObjectID].e.health / 2) + 1;
       if (w > sc.operand[0]) {
         w = sc.operand[0];
       }
-      battle.enemy[eventObjectID].e.health -= w;
+      Global.battle.enemy[eventObjectID].e.health -= w;
       break;
     case 0x005C:
       script.debug('[SCRIPT] Hide for a while'); // 隐蛊吧大概是
         // WARNING 转换位INT类型
-      battle.hidingTime = -sc.operand[0];
+      Global.battle.hidingTime = -sc.operand[0];
       break;
     case 0x005D:
       script.debug('[SCRIPT] Jump if player doesn\'t have the specified poison');
@@ -1168,7 +1167,7 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
     case 0x005E:
       script.debug('[SCRIPT] Jump if enemy doesn\'t have the specified poison');
       for (i = 0; i < Const.MAX_POISONS; i++) {
-        if (battle.enemy[eventObjectID].poisons[i].poisonID == sc.operand[0]) {
+        if (Global.battle.enemy[eventObjectID].poisons[i].poisonID == sc.operand[0]) {
           break;
         }
       }
@@ -1183,7 +1182,7 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
       break;
     case 0x0060:
       script.debug('[SCRIPT] Immediate KO of the enemy');
-      battle.enemy[eventObjectID].e.health = 0;
+      Global.battle.enemy[eventObjectID].e.health = 0;
       break;
     case 0x0061:
       script.debug('[SCRIPT] Jump if player is not poisoned');
@@ -1203,8 +1202,8 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
       break;
     case 0x0064:
       script.debug('[SCRIPT] Jump if enemy\'s HP is more than the specified percentage');
-      i = GameData.object[battle.enemy[eventObjectID].objectID].enemy.enemyID;
-      if (battle.enemy[eventObjectID].e.health * 100 > GameData.enemy[i].health * sc.operand[0]) {
+      i = GameData.object[Global.battle.enemy[eventObjectID].objectID].enemy.enemyID;
+      if (Global.battle.enemy[eventObjectID].e.health * 100 > GameData.enemy[i].health * sc.operand[0]) {
         scriptEntry = sc.operand[1] - 1;
       }
       break;
@@ -1219,19 +1218,18 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
     case 0x0066:
       script.debug('[SCRIPT] Throw weapon to enemy');
       w = sc.operand[1] * 5;
-      w += GameData.playerRoles.attackStrength[Global.party[battle.movingPlayerIndex].playerRole];
+      w += GameData.playerRoles.attackStrength[Global.party[Global.battle.movingPlayerIndex].playerRole];
       w += randomLong(0, 4);
-      // WARNING TODO
-      yield fight.battleSimulateMagic(SHORT(eventObjectID), sc.operand[0], w);
+      yield battle.battleSimulateMagic(SHORT(eventObjectID), sc.operand[0], w);
       break;
     case 0x0067:
       script.debug('[SCRIPT] Enemy use magic');
-      battle.enemy[eventObjectID].e.magic = sc.operand[0];
-      battle.enemy[eventObjectID].e.magicRate = ((sc.operand[1] == 0) ? 10 : sc.operand[1]);
+      Global.battle.enemy[eventObjectID].e.magic = sc.operand[0];
+      Global.battle.enemy[eventObjectID].e.magicRate = ((sc.operand[1] == 0) ? 10 : sc.operand[1]);
       break;
     case 0x0068:
       script.debug('[SCRIPT] Jump if it\'s enemy\'s turn');
-      if (battle.enemyMoving) {
+      if (Global.battle.enemyMoving) {
         scriptEntry = sc.operand[0] - 1;
       }
       break;
@@ -1241,11 +1239,11 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
       break;
     case 0x006A:
       script.debug('[SCRIPT] Steal from the enemy');
-      yield fight.stealFromEnemy(eventObjectID, sc.operand[0]);
+      yield battle.stealFromEnemy(eventObjectID, sc.operand[0]);
       break;
     case 0x006B:
       script.debug('[SCRIPT] Blow away enemies');
-      battle.blow = SHORT(sc.operand[0]);
+      Global.battle.blow = SHORT(sc.operand[0]);
       break;
     case 0x006C:
       script.debug('[SCRIPT] Walk the NPC in one step');
@@ -1328,7 +1326,7 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
         if (sc.operand[i] != 0) {
           Global.party[Global.maxPartyMemberIndex].playerRole = sc.operand[i] - 1;
           // WARNING TODO
-          // battle.player[Global.maxPartyMemberIndex].action.actionType = BattleAction.Attack;
+          Global.battle.player[Global.maxPartyMemberIndex].action.actionType = BattleActionType.Attack;
           Global.maxPartyMemberIndex++;
         }
       }
@@ -1560,7 +1558,7 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
       break;
     case 0x0089:
       script.debug('[SCRIPT] Set the battle result');
-      battle.BattleResult = sc.operand[0];
+      Global.battle.battleResult = sc.operand[0];
       break;
     case 0x008A:
       script.debug('[SCRIPT] Enable Auto-Battle for next battle');
@@ -1596,7 +1594,7 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
       script.debug('[SCRIPT] Jump if the enemy is not alone');
       if (Global.inBattle) {
         for (i = 0; i <= battle.maxEnemyIndex; i++) {
-          if (i != eventObjectID && battle.enemy[i].objectID === battle.enemy[eventObjectID].objectID) {
+          if (i != eventObjectID && Global.battle.enemy[i].objectID === Global.battle.enemy[eventObjectID].objectID) {
             scriptEntry = sc.operand[0] - 1;
             break;
           }
@@ -1607,18 +1605,18 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
       script.debug('[SCRIPT] Show a magic-casting animation for a player in battle');
       if (Global.inBattle) {
         if (sc.operand[0] !== 0) {
-          yield fight.battleShowPlayerPreMagicAnim(sc.operand[0] - 1, false);
-          battle.player[sc.operand[0] - 1].currentFrameNum = 6;
+          yield battle.battleShowPlayerPreMagicAnim(sc.operand[0] - 1, false);
+          Global.battle.player[sc.operand[0] - 1].currentFrameNum = 6;
         }
 
         for (i = 0; i < 5; i++) {
           for (j = 0; j <= Global.maxPartyMemberIndex; j++) {
-            battle.player[j].colorShift = i * 2;
+            Global.battle.player[j].colorShift = i * 2;
           }
           yield battle.delay(1, 0, true); // WARNING param normalize
         }
-        yield battle.backupScreen();
-        yield battle.updateFighters();
+        battle.backupScreen();
+        battle.updateFighters();
         yield battle.makeScene();
         yield battle.fadeScene();
       }
@@ -1689,9 +1687,10 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
       break;
     case 0x009C:
       script.debug('[SCRIPT] Enemy duplicate itself');
+      debugger
       w = 0;
-      for (i = 0; i <= battle.maxEnemyIndex; i++) {
-        if (battle.enemy[i].objectID != 0) {
+      for (i = 0; i <= Global.battle.maxEnemyIndex; i++) {
+        if (Global.battle.enemy[i].objectID != 0) {
           w++;
         }
       }
@@ -1706,119 +1705,120 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
       if (w === 0) {
         w = 1;
       }
-      for (i = 0; i <= battle.maxEnemyIndex; i++) {
-        if (w > 0 && battle.enemy[i].objectID == 0) {
+      for (i = 0; i <= Global.battle.maxEnemyIndex; i++) {
+        if (w > 0 && Global.battle.enemy[i].objectID == 0) {
           w--;
           // WARNING TODO
           //memset(&(battle.enemy[i]), 0, sizeof(BATTLEENEMY));
           //battle.resetEnemy(i);
-          memset(battle.enemy[i].uint8Array, 0, battle.enemy[i].uint8Array.length);
-          battle.enemy[i].objectID = battle.enemy[eventObjectID].objectID;
-          battle.enemy[i].e = battle.enemy[eventObjectID].e;
-          battle.enemy[i].scriptOnTurnStart = battle.enemy[eventObjectID].scriptOnTurnStart;
-          battle.enemy[i].scriptOnBattleEnd = battle.enemy[eventObjectID].scriptOnBattleEnd;
-          battle.enemy[i].scriptOnReady = battle.enemy[eventObjectID].scriptOnReady;
-          battle.enemy[i].state = Const.FighterState.Wait;
-          battle.enemy[i].timerMeter = 50;
-          battle.enemy[i].colorShift = 0;
+
+          // TODO
+          //memset(battle.enemy[i].uint8Array, 0, battle.enemy[i].uint8Array.length);
+          Global.battle.enemy[i].objectID = Global.battle.enemy[eventObjectID].objectID;
+          Global.battle.enemy[i].e = Global.battle.enemy[eventObjectID].e;
+          Global.battle.enemy[i].scriptOnTurnStart = Global.battle.enemy[eventObjectID].scriptOnTurnStart;
+          Global.battle.enemy[i].scriptOnBattleEnd = Global.battle.enemy[eventObjectID].scriptOnBattleEnd;
+          Global.battle.enemy[i].scriptOnReady = Global.battle.enemy[eventObjectID].scriptOnReady;
+          Global.battle.enemy[i].state = Const.FighterState.Wait;
+          Global.battle.enemy[i].timerMeter = 50;
+          Global.battle.enemy[i].colorShift = 0;
         }
       }
-      // WARNING TODO
-      // PAL_LoadBattleSprites();
-      for (i = 0; i <= battle.maxEnemyIndex; i++) {
-        if (battle.enemy[i].objectID === 0) {
+      battle.loadBattleSprites();
+      for (i = 0; i <= Global.battle.maxEnemyIndex; i++) {
+        if (Global.battle.enemy[i].objectID === 0) {
           continue;
         }
-        battle.enemy[i].pos = battle.enemy[eventObjectID].pos;
+        Global.battle.enemy[i].pos = Global.battle.enemy[eventObjectID].pos;
       }
       for (i = 0; i < 10; i++) {
-        for (j = 0; j <= battle.maxEnemyIndex; j++) {
-          x = floor((PAL_X(battle.enemy[j].pos) + PAL_X(battle.enemy[j].posOriginal)) / 2);
-          y = floor((PAL_Y(battle.enemy[j].pos) + PAL_Y(battle.enemy[j].posOriginal)) / 2);
-          battle.enemy[j].pos = PAL_XY(x, y);
+        for (j = 0; j <= Global.battle.maxEnemyIndex; j++) {
+          x = floor((PAL_X(Global.battle.enemy[j].pos) + PAL_X(Global.battle.enemy[j].posOriginal)) / 2);
+          y = floor((PAL_Y(Global.battle.enemy[j].pos) + PAL_Y(Global.battle.enemy[j].posOriginal)) / 2);
+          Global.battle.enemy[j].pos = PAL_XY(x, y);
         }
-        yield battle.delay(1, 0, true); // WARNING param normalize
+        yield battle.delay(1, 0, true);
       }
-      // WARNING TODO
-      yield battle.updateFighters();
-      yield battle.delay(1, 0, true); // WARNING param normalize
+      battle.updateFighters();
+      yield battle.delay(1, 0, true);
       break;
     case 0x009E:
       script.debug('[SCRIPT] Enemy summons another monster');
+      debugger
       x = 0;
       w = sc.operand[0];
       y = (SHORT(sc.operand[1]) <= 0 ? 1 : SHORT(sc.operand[1]));
       if (w === 0 || w === 0xFFFF) {
-        w = battle.enemy[eventObjectID].objectID;
+        w = Global.battle.enemy[eventObjectID].objectID;
       }
-      for (i = 0; i <= battle.maxEnemyIndex; i++) {
-        if (battle.enemy[i].objectID == 0){
+      for (i = 0; i <= Global.battle.maxEnemyIndex; i++) {
+        if (Global.battle.enemy[i].objectID == 0){
           x++;
         }
       }
-      if (x < y || battle.hidingTime > 0 ||
-          battle.enemy[eventObjectID].status[PlayerStatus.Sleep] !== 0 ||
-          battle.enemy[eventObjectID].status[PlayerStatus.Paralyzed] !== 0 ||
-          battle.enemy[eventObjectID].status[PlayerStatus.Confused] !== 0) {
+      if (x < y || Global.battle.hidingTime > 0 ||
+          Global.battle.enemy[eventObjectID].status[PlayerStatus.Sleep] !== 0 ||
+          Global.battle.enemy[eventObjectID].status[PlayerStatus.Paralyzed] !== 0 ||
+          Global.battle.enemy[eventObjectID].status[PlayerStatus.Confused] !== 0) {
         if (sc.operand[2] != 0) {
           scriptEntry = sc.operand[2] - 1;
         }
       } else {
-        for (i = 0; i <= battle.maxEnemyIndex; i++) {
-          if (battle.enemy[i].objectID === 0){
+        for (i = 0; i <= Global.battle.maxEnemyIndex; i++) {
+          if (Global.battle.enemy[i].objectID === 0){
             //battle.resetEnemy(i);
-            memset(battle.enemy[i].uint8Array, 0, battle.enemy[i].uint8Array.length);
+            //memset(battle.enemy[i].uint8Array, 0, battle.enemy[i].uint8Array.length);
 
-            battle.enemy[i].objectID = w;
-            battle.enemy[i].e = GameData.enemy[GameData.object[w].enemy.enemyID];
+            Global.battle.enemy[i].objectID = w;
+            Global.battle.enemy[i].e = GameData.enemy[GameData.object[w].enemy.enemyID];
 
-            battle.enemy[i].state = Const.FighterState.Wait;
-            battle.enemy[i].scriptOnTurnStart = GameData.object[w].enemy.scriptOnTurnStart;
-            battle.enemy[i].scriptOnBattleEnd = GameData.object[w].enemy.scriptOnBattleEnd;
-            battle.enemy[i].scriptOnReady = GameData.object[w].enemy.scriptOnReady;
-            battle.enemy[i].timerMeter = 50;
-            battle.enemy[i].colorShift = 8;
+            Global.battle.enemy[i].state = Const.FighterState.Wait;
+            Global.battle.enemy[i].scriptOnTurnStart = GameData.object[w].enemy.scriptOnTurnStart;
+            Global.battle.enemy[i].scriptOnBattleEnd = GameData.object[w].enemy.scriptOnBattleEnd;
+            Global.battle.enemy[i].scriptOnReady = GameData.object[w].enemy.scriptOnReady;
+            Global.battle.enemy[i].timerMeter = 50;
+            Global.battle.enemy[i].colorShift = 8;
             y--;
             if (y <= 0) {
               break;
             }
           }
         }
-        yield battle.delay(2, 0, true); // WARNING param normalize
+        yield battle.delay(2, 0, true);
         battle.backupScene();
-        yield battle.loadSprites();
+        battle.loadBattleSprites();
         yield battle.makeScene();
         yield sound.play(212);
         yield battle.fadeScene();
 
-        for (i = 0; i <= battle.maxEnemyIndex; i++) {
-          battle.enemy[i].colorShift = 0;
+        for (i = 0; i <= Global.battle.maxEnemyIndex; i++) {
+          Global.battle.enemy[i].colorShift = 0;
         }
 
-        battle.backupScene();
+        Global.battle.backupScene();
         yield battle.makeScene();
         yield battle.fadeScene();
       }
       break;
     case 0x009F:
       script.debug('[SCRIPT] Enemy transforms into something else');
-      if (battle.hidingTime <= 0 &&
-          battle.enemy[eventObjectID].status[PlayerStatus.Sleep] === 0 &&
-          battle.enemy[eventObjectID].status[PlayerStatus.Paralyzed] === 0 &&
-          battle.enemy[eventObjectID].status[PlayerStatus.Confused] === 0){
-        w = battle.enemy[eventObjectID].e.health;
-        battle.enemy[eventObjectID].objectID = sc.operand[0];
-        battle.enemy[eventObjectID].e = GameData.enemy[GameData.object[sc.operand[0]].enemy.enemyID];
-        battle.enemy[eventObjectID].e.health = w;
-        battle.enemy[eventObjectID].wCurrentFrame = 0;
+      if (Global.battle.hidingTime <= 0 &&
+          Global.battle.enemy[eventObjectID].status[PlayerStatus.Sleep] === 0 &&
+          Global.battle.enemy[eventObjectID].status[PlayerStatus.Paralyzed] === 0 &&
+          Global.battle.enemy[eventObjectID].status[PlayerStatus.Confused] === 0){
+        w = Global.battle.enemy[eventObjectID].e.health;
+        Global.battle.enemy[eventObjectID].objectID = sc.operand[0];
+        Global.battle.enemy[eventObjectID].e = GameData.enemy[GameData.object[sc.operand[0]].enemy.enemyID];
+        Global.battle.enemy[eventObjectID].e.health = w;
+        Global.battle.enemy[eventObjectID].wCurrentFrame = 0;
         for (i = 0; i < 6; i++) {
-          battle.enemy[eventObjectID].colorShift = i;
+          Global.battle.enemy[eventObjectID].colorShift = i;
           yield battle.delay(1, 0, false); // WARNING param normalize
         }
-        battle.enemy[eventObjectID].colorShift = 0;
+        Global.battle.enemy[eventObjectID].colorShift = 0;
 
         battle.backupScene();
-        yield battle.loadBattleSprites();
+        battle.loadBattleSprites();
         yield battle.makeScene();
         yield battle.fadeScene();
       }
@@ -1983,8 +1983,7 @@ script.runTriggerScript = function*(scriptEntry, eventObjectID) {
         } else if (Global.inBattle) {
           // WARNING TODO
           yield battle.makeScene();
-          surface.blit(battle.sceneBuf);
-          //SDL_BlitSurface(g_Battle.lpSceneBuf, NULL, gpScreen, NULL);
+          surface.blit(Global.battle.sceneBuf);
           surface.updateScreen(null);
         } else {
           if (sc.operand[2]){

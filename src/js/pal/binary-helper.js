@@ -91,7 +91,7 @@ var memmove = global.memmove = function(dst, src, len) {
   var tmp = new dst.constructor(len);
   memcpy(tmp, src, len);
   memcpy(dst, tmp, len);
-}
+};
 
 /* 继承DataView */
 var BinaryReader = global.BinaryReader = function(buffer, byteOffset, byteLength, littleEndian) {

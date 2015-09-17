@@ -36,6 +36,9 @@ var Surface = function(cvs, width, height, debugcvs) {
 
   this.alpha = 1.0;
   this.byteBuffer = new Uint8Array(this.len);
+  this.backup = new Uint8Array(this.len);
+  this.backup.width = this.width;
+  this.backup.height = this.height;
 
   this.clear();
 };
@@ -48,13 +51,16 @@ utils.extend(Surface.prototype, {
     log.debug('[VIDEO] init surface');
   },
   restoreScreen: function() {
-    log.debug('[VIDEO] restoreScreen');
-    if (!this.backup) return;
+    log.trace('[VIDEO] restoreScreen');
+    //if (!this.backup) return;
     this.putRect(this.backup, 0, 0);
   },
   backupScreen: function() {
-    log.debug('[VIDEO] backupScreen');
-    this.backup = this.getRect(0, 0, this.width, this.height);
+    log.trace('[VIDEO] backupScreen');
+    //this.backup = this.getRect(0, 0, this.width, this.height);
+    for (var i = 0; i < this.len; ++i) {
+      this.backup[i] = this.byteBuffer[i];
+    }
   },
   updateScreen: function(rect) {
     rect = rect || new RECT(0, 0, this.width, this.height);
@@ -308,6 +314,9 @@ utils.extend(Surface.prototype, {
    * @param  {POS} pos
    */
   blitRLE: function(RLE, pos, buf, nodebug) {
+    this.blitRLEWithColorShift(RLE, pos, 0, buf, nodebug);
+  },
+  blitRLEWithColorShift: function(RLE, pos, colorShift, buf, nodebug) {
     var i, j,
         x, y,
         len = 0,
@@ -369,9 +378,23 @@ utils.extend(Surface.prototype, {
             break; // No more pixels needed, break out
           }
 
+          var pixel = RLE[idx + j];
+          if (colorShift !== 0) {
+            var high = pixel & 0xF0;
+            var low = pixel & 0x0F;
+            low += colorShift;
+            if (low > 0x0F) {
+              low = 0x0F;
+            }
+            if (low < 0) {
+              low = 0;
+            }
+            pixel = (high | low);
+          }
+
           // Put the pixel onto the surface (FIXME: inefficient).
-          var offset = (y * this.width + x) * 4;
-          byteBuffer[y * this.width + x] = RLE[idx + j];
+          //var offset = (y * this.width + x) * 4;
+          byteBuffer[y * this.width + x] = pixel;
         }
         //RLE = RLE.subarray(T);
         idx += T;
@@ -642,9 +665,32 @@ utils.extend(Surface.prototype, {
   },
   shakeScreen: function*(shakeTime, shakeLevel){
     log.debug(['[VIDEO] shakeScreen', shakeTime, shakeLevel].join(' '));
+    Surface.shakeTime = shakeTime;
+    Surface.shakeLevel = shakeLevel;
   },
   switchScreen: function*(speed) {
     log.debug(['[VIDEO] switchScreen', speed].join(' '));
+
+    var indices = [0, 3, 1, 5, 2, 4];
+
+    speed++;
+    speed *= 5; // 10;
+
+    var backup = this.backup;
+    var buffer = this.getRect(0, 0, 320, 200);
+    var screen = this.byteBuffer;
+
+    for (var i = 0; i < 6; i++) {
+      for (var j = indices[i]; j < this.pitch * this.height; j += 6) {
+        backup[j] = buffer[j];
+      }
+
+      // Draw the backup buffer to the screen
+      this.blitSurface(backup, null, screen, null);
+      this.updateScreen(null);
+
+      yield sleep(speed);
+    }
   },
 
   /**
