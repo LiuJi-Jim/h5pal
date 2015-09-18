@@ -427,7 +427,7 @@ script_extras.init = function*(surf, _script) {
     return w;
   };
 
-  script.getPlayerCanAttackAll = function(role) {
+  script.layerCanAttackAll = function(role) {
     for (var i = 0; i < Const.MAX_PLAYER_EQUIPMENTS; ++i) {
       if (Global.equipmentEffect[i].attackAll[role] != 0){
         return true;

@@ -3,8 +3,8 @@ log.trace('music module load');
 var music = {};
 
 music.play = function() {
-  // TODO
-  console.log('music.play', arguments);
+  var args = toArray(arguments);
+  log.debug(['[MUSIC] play'].concat(args).join(' '));
 };
 
 export default music;

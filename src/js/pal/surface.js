@@ -317,6 +317,12 @@ utils.extend(Surface.prototype, {
     this.blitRLEWithColorShift(RLE, pos, 0, buf, nodebug);
   },
   blitRLEWithColorShift: function(RLE, pos, colorShift, buf, nodebug) {
+    this.blitRLEWithMonoColorAndColorShift(RLE, pos, false, colorShift, buf, nodebug);
+  },
+  blitRLEMonoColor: function(RLE, pos, color, colorShift, buf, nodebug) {
+    this.blitRLEWithMonoColorAndColorShift(RLE, pos, color, colorShift, buf, nodebug);
+  },
+  blitRLEWithMonoColorAndColorShift: function(RLE, pos, color, colorShift, buf, nodebug) {
     var i, j,
         x, y,
         len = 0,
@@ -379,9 +385,9 @@ utils.extend(Surface.prototype, {
           }
 
           var pixel = RLE[idx + j];
+          var high = pixel & 0xF0;
+          var low = pixel & 0x0F;
           if (colorShift !== 0) {
-            var high = pixel & 0xF0;
-            var low = pixel & 0x0F;
             low += colorShift;
             if (low > 0x0F) {
               low = 0x0F;
@@ -390,6 +396,9 @@ utils.extend(Surface.prototype, {
               low = 0;
             }
             pixel = (high | low);
+          }
+          if (color !== false) {
+            pixel = ((color & 0xF0) | low);
           }
 
           // Put the pixel onto the surface (FIXME: inefficient).

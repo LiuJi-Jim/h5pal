@@ -47,14 +47,22 @@ global.BattleActionType = {
   AttackMate: 8    // attack teammate (confused only)
 };
 
-var BattleAction = battle.BattleAction = function(actionType, actionID, target, remainingTime) {
+var BattleAction = battle.BattleAction = function() {
+  this.reset();
+};
+BattleAction.prototype.reset = function(actionType, actionID, target, remainingTime) {
   this.actionType = actionType || BattleActionType.Pass;
   this.actionID = actionID || 0;
   this.target = target || 0;
   this.remainingTime = remainingTime || 0.0;
+
+  return this;
 };
 
-var BattleEnemy = battle.BattleEnemy = function(
+var BattleEnemy = battle.BattleEnemy = function() {
+  this.reset();
+};
+BattleEnemy.prototype.reset = function(
   objectID,
   e,
   status,
@@ -72,10 +80,17 @@ var BattleEnemy = battle.BattleEnemy = function(
   scriptOnBattleEnd,
   scriptOnReady,
   prevHP,
-  colorShift) {
+  colorShift
+  ) {
   this.objectID = objectID || 0;
   this.e = e || null;
-  this.status = status || new Array(PlayerStatus.All);
+  if (this.status) {
+    for (var i = 0; i < this.status.length; ++i) {
+      this.status[i] = 0;
+    }
+  } else {
+    this.status = status || new Array(PlayerStatus.All);
+  }
   this.timeMeter = timeMeter || 0.0;
   this.poisons = poisons || Const.MAX_POISONS;
   this.sprite = sprite || null;
@@ -91,9 +106,14 @@ var BattleEnemy = battle.BattleEnemy = function(
   this.scriptOnReady = scriptOnReady || 0;
   this.prevHP = prevHP || 0;
   this.colorShift = colorShift || 0;
+
+  return this;
 };
 
-var BattlePlayer = battle.BattlePlayer = function(
+var BattlePlayer = battle.BattlePlayer = function() {
+  this.reset();
+};
+BattlePlayer.prototype.reset = function(
   colorShift,
   timeMeter,
   timeSpeedModifier,
@@ -106,8 +126,7 @@ var BattlePlayer = battle.BattlePlayer = function(
   action,
   defending,
   prevHP,
-  prevMP
-  ) {
+  prevMP) {
   this.colorShift = colorShift || 0;
   this.timeMeter = timeMeter || 0.0;
   this.timeSpeedModifier = timeSpeedModifier || 0.0;
@@ -116,14 +135,23 @@ var BattlePlayer = battle.BattlePlayer = function(
   this.pos = pos || 0;
   this.originalPos = originalPos || 0;
   this.state = state || FighterState.Wait;
-  this.action = action || (new BattleAction());
+  this.action = (this.action ?
+                 this.action.reset() :
+                 (action || (new BattleAction())));
   this.defending = defending || false;
   this.prevHP = prevHP || 0;
   this.prevMP = prevMP || 0;
+
+  return this;
 };
 
-var Summon = battle.Summon = function(currentFrame) {
+var Summon = battle.Summon = function() {
+  this.reset();
+};
+Summon.prototype.reset = function(currentFrame) {
   this.currentFrame = currentFrame || 0;
+
+  return this;
 };
 
 var MAX_BATTLE_ACTIONS = 256;
@@ -134,10 +162,15 @@ global.BattlePhase = {
   PerformAction: 1
 };
 
-var ActionQueue = battle.ActionQueue = function(isEnemy, dexterity, index) {
+var ActionQueue = battle.ActionQueue = function() {
+  this.reset();
+};
+ActionQueue.prototype.reset = function(isEnemy, dexterity, index) {
   this.isEnemy = isEnemy || false;
   this.dexterity = dexterity || 0;
   this.index = index || 0;
+
+  return this;
 };
 
 Const.MAX_ACTIONQUEUE_ITEMS = (Const.MAX_PLAYERS_IN_PARTY + Const.MAX_ENEMIES_IN_TEAM * 2);
@@ -193,7 +226,7 @@ battle.init = function*(surf) {
 /**
  * Generate the battle scene into the scene buffer.
  */
-battle.makeScene = function*() {
+battle.makeScene = function() {
   // Draw the background
   var srcOffset = 0;
   var dstOffset = 0;
@@ -202,7 +235,7 @@ battle.makeScene = function*() {
 
   for (var i = 0; i < surface.pitch * surface.height; i++) {
     var b = background[srcOffset] & 0x0F;
-    b += Global.backgroundColorShift;
+    b += Global.battle.backgroundColorShift;
 
     if (b & 0x80) {
       b = 0;
@@ -221,6 +254,9 @@ battle.makeScene = function*() {
   // Draw the enemies
   for (var i = Global.battle.maxEnemyIndex; i >= 0; i--) {
     var enemy = Global.battle.enemy[i];
+    if (enemy.objectID == 0) {
+      continue;
+    }
     var pos = enemy.pos;
 
     if (enemy.status[PlayerStatus.Confused] > 0 &&
@@ -346,7 +382,7 @@ battle.fadeScene = function*() {
       // Draw the backup buffer to the screen
       surface.blitSurface(backup, null, screen, null);
 
-      uibattle.update();
+      yield uibattle.update();
       surface.updateScreen(null);
 
       yield sleep(8); // 16
@@ -355,7 +391,7 @@ battle.fadeScene = function*() {
 
   // Draw the result buffer to the screen as the final step
   surface.blitSurface(Global.battle.sceneBuf, null, screen, null);
-  uibattle.update();
+  yield uibattle.update();
   surface.updateScreen(null);
 };
 
@@ -369,7 +405,7 @@ battle.main = function*() {
   var sceneBuf = Global.battle.sceneBuf;
 
   // Generate the scene and draw the scene to the screen buffer
-  yield battle.makeScene();
+  battle.makeScene();
   surface.blitSurface(sceneBuf, null, screen, null);
 
   // Fade out the music and delay for a while
@@ -484,21 +520,22 @@ battle.loadBattleSprites = function() {
 
   // Load battle sprites for enemies
   for (var i = 0; i < Const.MAX_ENEMIES_IN_TEAM; i++) {
-    if (Global.battle.enemy[i].objectID == 0) {
+    var enemy = Global.battle.enemy[i];
+    if (enemy.objectID == 0) {
        continue;
     }
 
-    var enemyID = GameData.object[Global.battle.enemy[i].objectID].enemy.enemyID
-    Global.battle.enemy[i].sprite = new Sprite(Files.ABC.decompressChunk(enemyID));
+    var enemyID = GameData.object[enemy.objectID].enemy.enemyID
+    enemy.sprite = new Sprite(Files.ABC.decompressChunk(enemyID));
 
     // Set the default position for this enemy
     var x = GameData.enemyPos.pos[i][Global.battle.maxEnemyIndex].x;
     var y = GameData.enemyPos.pos[i][Global.battle.maxEnemyIndex].y;
 
-    y += Global.battle.enemy[i].e.yPosOffset;
+    y += enemy.e.yPosOffset;
 
-    Global.battle.enemy[i].originalPos = PAL_XY(x, y);
-    Global.battle.enemy[i].pos = PAL_XY(x, y);
+    enemy.originalPos = PAL_XY(x, y);
+    enemy.pos = PAL_XY(x, y);
   }
 };
 
@@ -795,7 +832,8 @@ battle.start = function*(enemyTeam, isBoss) {
   // Store all enemies
   for (var i = 0; i < Const.MAX_ENEMIES_IN_TEAM; i++) {
     //memset(&(Global.battle.enemy[i]), 0, sizeof(BATTLEENEMY));
-    Global.battle.enemy[i] = new BattleEnemy();
+    var enemy = Global.battle.enemy[i];
+    enemy.reset();
     var w = GameData.enemyTeam[enemyTeam].enemy[i];
 
     if (w == 0xFFFF) {
@@ -803,13 +841,13 @@ battle.start = function*(enemyTeam, isBoss) {
     }
 
     if (w != 0) {
-      Global.battle.enemy[i].e = GameData.enemy[GameData.object[w].enemy.enemyID];
-      Global.battle.enemy[i].objectID = w;
-      Global.battle.enemy[i].state = FighterState.Wait;
-      Global.battle.enemy[i].scriptOnTurnStart = GameData.object[w].enemy.scriptOnTurnStart;
-      Global.battle.enemy[i].scriptOnBattleEnd = GameData.object[w].enemy.scriptOnBattleEnd;
-      Global.battle.enemy[i].scriptOnReady = GameData.object[w].enemy.scriptOnReady;
-      Global.battle.enemy[i].colorShift = 0;
+      enemy.e = GameData.enemy[GameData.object[w].enemy.enemyID];
+      enemy.objectID = w;
+      enemy.state = FighterState.Wait;
+      enemy.scriptOnTurnStart = GameData.object[w].enemy.scriptOnTurnStart;
+      enemy.scriptOnBattleEnd = GameData.object[w].enemy.scriptOnBattleEnd;
+      enemy.scriptOnReady = GameData.object[w].enemy.scriptOnReady;
+      enemy.colorShift = 0;
     }
   }
 
@@ -855,14 +893,11 @@ battle.start = function*(enemyTeam, isBoss) {
   //utils.fillArray(Global.battle.UI.showNum, uibattle.ShowNum);
   //memset(Global.battle.UI.rgShowNum, 0, sizeof(Global.battle.UI.rgShowNum));
   Global.battle.UI.showNum.forEach(function(sn, i) {
-    sn.num = 0;
-    sn.pos = 0;
-    sn.time = 0;
-    sn.color = NumColor.Yellow;
+    sn.reset();
   });
 
   Global.battle.summonSprite = null;
-  Global.battle.sBackgroundColorShift = 0;
+  Global.battle.backgroundColorShift = 0;
 
   Global.inBattle = true;
   Global.battle.battleResult = BattleResult.PreBattle;

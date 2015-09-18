@@ -1617,7 +1617,7 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
         }
         battle.backupScreen();
         battle.updateFighters();
-        yield battle.makeScene();
+        battle.makeScene();
         yield battle.fadeScene();
       }
       break;
@@ -1787,7 +1787,7 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
         yield battle.delay(2, 0, true);
         battle.backupScene();
         battle.loadBattleSprites();
-        yield battle.makeScene();
+        battle.makeScene();
         yield sound.play(212);
         yield battle.fadeScene();
 
@@ -1796,7 +1796,7 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
         }
 
         Global.battle.backupScene();
-        yield battle.makeScene();
+        battle.makeScene();
         yield battle.fadeScene();
       }
       break;
@@ -1819,7 +1819,7 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
 
         battle.backupScene();
         battle.loadBattleSprites();
-        yield battle.makeScene();
+        battle.makeScene();
         yield battle.fadeScene();
       }
       break;
@@ -1982,7 +1982,7 @@ script.runTriggerScript = function*(scriptEntry, eventObjectID) {
           surface.restoreScreen();
         } else if (Global.inBattle) {
           // WARNING TODO
-          yield battle.makeScene();
+          battle.makeScene();
           surface.blit(Global.battle.sceneBuf);
           surface.updateScreen(null);
         } else {

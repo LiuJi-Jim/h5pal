@@ -5,8 +5,6 @@
  * @type {Object}
  */
 var Const = global.Const = {
-  FRAME_TIME: (1000 / 30),
-
   /**
    * maximum number of players in party
    * @memberof Const
