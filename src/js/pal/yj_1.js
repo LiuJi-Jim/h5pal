@@ -230,7 +230,7 @@ yj_1.decompress = function(Source) {
 
     //if ((node = root = (TreeNode *)malloc(sizeof(TreeNode) * (tree_len + 1))) == NULL)
     //   return -1;
-    root = initArray(tree_len + 1, TreeNode);
+    root = utils.initArray(TreeNode, tree_len + 1);
     root[0].leaf = 0;
     root[0].value = 0;
     root[0].left = 1; // WARNING 这里把指针改成索引了！！！

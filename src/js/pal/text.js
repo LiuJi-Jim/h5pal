@@ -392,7 +392,7 @@ text.init = function*(surf, _ui) {
     if (textLib.dialogPosition == DialogPosition.CenterWindow) {
       // The text should be shown in a small window at the center of the screen
       if (PAL_CLASSIC) {
-        if (Global.inBattle && Battle.battleResult == BattleResult.OnGoing) {
+        if (Global.inBattle && Global.battle.battleResult == BattleResult.OnGoing) {
           // uibattle.showText(buf, 1400);
         }
       }

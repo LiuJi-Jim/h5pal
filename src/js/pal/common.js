@@ -1,4 +1,5 @@
 global.PAL_CLASSIC = true;
+global.INVINCIBLE = false;
 
 var slice = Array.prototype.slice;
 
@@ -173,14 +174,6 @@ global.hrtime = (function(){
 global.isNumber = function(a){
   //return (a == +a);
   return !isNaN(a); // WARNING 靠不靠谱呢
-};
-
-global.initArray = function(len, ctor) {
-  var arr = new Array(len);
-  for (var i=0; i<len; ++i) {
-    arr[i] = (typeof ctor == 'function') ? new ctor() : {};
-  }
-  return arr;
 };
 
 global.toArray = function(obj) {

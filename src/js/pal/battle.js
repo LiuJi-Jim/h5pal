@@ -92,7 +92,13 @@ BattleEnemy.prototype.reset = function(
     this.status = status || new Array(PlayerStatus.All);
   }
   this.timeMeter = timeMeter || 0.0;
-  this.poisons = poisons || Const.MAX_POISONS;
+  if (this.poisons) {
+    for (var i = 0; i < this.poisons.length; ++i) {
+      memset(this.poisons[i].uint8Array, 0, PoisonStatus.size);
+    }
+  } else {
+    this.poisons = poisons || utils.initArray(PoisonStatus, Const.MAX_POISONS);
+  }
   this.sprite = sprite || null;
   this.pos = pos || 0;
   this.originalPos = originalPos || 0;
@@ -191,7 +197,7 @@ var Battle = battle.Battle = function() {
   this.enemyCleared = false;
   this.battleResult = BattleResult.Terminated;
   this.UI = new uibattle.BattleUI();
-  this.effectSprite = null;
+  this.effectSprite = new Sprite(Files.DATA.readChunk(10));
   this.enemyMoving = false;
   this.hidingTime = 0;
   this.movingPlayerIndex = 0;
@@ -533,6 +539,8 @@ battle.loadBattleSprites = function() {
     var y = GameData.enemyPos.pos[i][Global.battle.maxEnemyIndex].y;
 
     y += enemy.e.yPosOffset;
+
+    console.log('calc enemy pos', i, x, y, enemy.e.yPosOffset);
 
     enemy.originalPos = PAL_XY(x, y);
     enemy.pos = PAL_XY(x, y);
@@ -905,7 +913,7 @@ battle.start = function*(enemyTeam, isBoss) {
   battle.updateFighters();
 
   // Load the battle effect sprite.
-  Global.battle.effectSprite = Files.DATA.readChunk(10);
+  //Global.battle.effectSprite = Files.DATA.readChunk(10);
 
   Global.battle.phase = BattlePhase.SelectAction;
   Global.battle.repeat = false;

@@ -1069,7 +1069,7 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
       return 0; // don't go further
     case 0x004F:
       script.debug('[SCRIPT] Fade the screen to red color (game over)');
-      yield script.surface.fadeToRed();
+      yield surface.fadeToRed();
       break;
     case 0x0050:
       script.debug('[SCRIPT] screen fade out');
@@ -1912,17 +1912,13 @@ script.runTriggerScript = function*(scriptEntry, eventObjectID) {
     // WARNING TODO 这里有个为空的问题，在求雨情节完成时
     evtObj = GameData.eventObject[eventObjectID - 1];
   }
-  var scriptSuccess = true;
+  script.scriptSuccess = true;
 
   // Set the default dialog speed.
   ui.setDialogDelayTime(3);
 
   while (scriptEntry !== 0 && !ended) {
     sc = GameData.scriptEntry[scriptEntry];
-
-    if (scriptEntry !== 38569) {
-    traceScript(scriptEntry, sc, eventObjectID);
-  }
 
     log.trace('[SCRIPT] runTriggerScript %d: (%d(0x%.4x) - %d, %d, %d)',
       scriptEntry, sc.operation, sc.operation,
@@ -1998,7 +1994,7 @@ script.runTriggerScript = function*(scriptEntry, eventObjectID) {
         scriptEntry++;
         break;
       case 0x0006:
-        script.debug('[SCRIPT] Jump to the specified address by the specified rate');
+        script.debug('[SCRIPT] Jump to the specified address by the specified rate', sc.operand.join(','));
         if (randomLong(1, 100) >= sc.operand[0]) {
           scriptEntry = sc.operand[1];
           continue;

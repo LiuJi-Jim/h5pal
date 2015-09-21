@@ -675,7 +675,7 @@ global.BattleField = defineStruct(
   SHORT              rgsMagicEffect[NUM_MAGIC_ELEMENTAL]; // effect of attributed magics
   */
   'BattleField',
-  'screenWave|WORD magicEffects|SHORT*' + Const.NUM_MAGIC_ELEMENTAL
+  'screenWave|WORD magicEffect|SHORT*' + Const.NUM_MAGIC_ELEMENTAL
 );
 
 // magics learned when level up

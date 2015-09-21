@@ -558,6 +558,56 @@ utils.extend(Surface.prototype, {
 
     me.setPalette(palette, true);
   },
+
+  fadeToRed: function*() {
+    log.debug(['[VIDEO] fadeToRed'].join(' '));
+    var palette = this.getPalette();
+    var newPalette = [];
+    // Get the original palette...
+    for (var i=0; i<256; ++i) {
+      var p = palette[i];
+      newPalette[i] = {
+        r: p.r,
+        g: p.g,
+        b: p.b
+      };
+    }
+
+    for (var i = 0; i < this.len; ++i) {
+      if (this.byteBuffer[i] == 0x4F) {
+        this.byteBuffer[i] = 0x4E; // HACKHACK
+      }
+    }
+    var me = this;
+    var startTime = timestamp();
+    for (var i = 0; i < 32; ++i) {
+      for (var j = 0; j < 256; ++j){
+        if (j == 0x4F) {
+          continue; // so that texts will not be affected
+        }
+        var p = palette[j],
+            np = newPalette[j];
+        var color = ~~((p.r + p.g + p.b) / 4) + 64;
+
+        if (np.r > color) {
+          np.r -= (np.r - color > 8 ? 8 : np.r - color);
+        } else if (np.r < color) {
+          np.r += (color - np.r > 8 ? 8 : color - np.r);
+        }
+
+        if (np.g > 0) {
+          np.g -= (np.g > 8 ? 8 : np.g);
+        }
+
+        if (np.b > 0) {
+          np.b -= (np.b > 8 ? 8 : np.b);
+        }
+      }
+
+      me.setPalette(newPalette);
+      yield sleepByFrame(1);
+    }
+  },
   paletteFade: function*(idx, night, update) {
     log.debug(['[VIDEO] paletteFade', idx, night, update].join(' '));
     var me = this;

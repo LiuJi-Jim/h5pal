@@ -324,6 +324,9 @@ function viewGetter(func, offset) {
 
 function viewSetter(func, offset) {
   return function(val) {
+    if (func.charAt(3) === 'U' && val < 0) {
+      val = 0;
+    }
     this.view[func](offset, val);
   };
 }
