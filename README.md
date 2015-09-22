@@ -59,8 +59,8 @@ h5pal
 | 文本 | 99% |
 | 脚本（天坑） | 50% |
 | 平常UI | 50% |
-| 战斗UI | 0% |
-| 战斗（天坑） | 0% |
+| 战斗UI | 10% |
+| 战斗（天坑） | 20% |
 | 播片 | 90% |
 | 结局 | 95% |
 | 音乐 | 0% |
@@ -139,8 +139,8 @@ Eh wait, no battle system? What about encounters? `return true;` LoL.
 | Text | 99% |
 | Script (OMG) | 50% |
 | Game UI | 50% |
-| Battle UI | 0% |
-| Battle (OMG) | 0% |
+| Battle UI | 10% |
+| Battle (OMG) | 20% |
 | Movie | 90% |
 | Ending | 95% |
 | Music | 0% |
