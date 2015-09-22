@@ -2089,7 +2089,7 @@ fight.init = function*(surf, _battle) {
                       ((Global.playerStatus[w][PlayerStatus.Protect] > 0) ? 2 : 1)) +
                       (magAutoDefend[i] ? 1 : 0);
             damage = ~~damage;
-            damage = 999;
+            //damage = 999;
 
             if (damage > GameData.playerRoles.HP[w]) {
               damage = GameData.playerRoles.HP[w];
@@ -2121,7 +2121,7 @@ fight.init = function*(surf, _battle) {
                     ((Global.playerStatus[playerRole][PlayerStatus.Protect] > 0) ? 2 : 1)) +
                     (autoDefend ? 1 : 0);
           damage = ~~damage;
-            damage = 999;
+          // damage = 999;
 
           if (damage > GameData.playerRoles.HP[playerRole]) {
             damage = GameData.playerRoles.HP[playerRole];
@@ -2297,7 +2297,7 @@ fight.init = function*(surf, _battle) {
         if (Global.playerStatus[playerRole][PlayerStatus.Protect]) {
           damage /= 2;
         }
-            damage = 999;
+        // damage = 999;
 
         if (SHORT(GameData.playerRoles.HP[playerRole]) < damage) {
           damage = GameData.playerRoles.HP[playerRole];
