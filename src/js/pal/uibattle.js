@@ -73,13 +73,14 @@ var TIMEMETER_COLOR_HASTE                     = 0x2A;
 
 var BATTLEUI_MAX_SHOWNUM                      = 16;
 
-var uibattle = {};
+var uibattle = {
+  frame: 0,
+  curMiscMenuItem: 0,
+  curSubMenuItem: 0
+};
 
 var surface = null;
 var battle = null;
-var curMiscMenuItem = 0;
-var curSubMenuItem = 0;
-var frame = 0;
 
 uibattle.init = function*(surf, _battle) {
   log.debug('[BATTLE] init uibattle');
@@ -442,7 +443,7 @@ uibattle.pickAutoMagic = function(playerRole, randomRange) {
  * Update the status of battle UI.
  */
 uibattle.update = function*() {
-  frame++;
+  uibattle.frame++;
   if (Global.battle.UI.autoAttack && !Global.autoBattle) {
     // Draw the "auto attack" message if in the autoattack mode.
     if (input.isKeyPressed(Key.Menu)) {
@@ -571,7 +572,7 @@ uibattle.update = function*() {
 
     // Draw the arrow on the player's head.
     var i = SPRITENUM_BATTLE_ARROW_CURRENTPLAYER_RED;
-    if (frame & 1) {
+    if (uibattle.frame & 1) {
       i = SPRITENUM_BATTLE_ARROW_CURRENTPLAYER;
     }
 
@@ -684,7 +685,7 @@ uibattle.update = function*() {
               case 3:
                 // Misc menu
                 Global.battle.UI.menuState = BattleMenuState.Misc;
-                curMiscMenuItem = 0;
+                uibattle.curMiscMenuItem = 0;
                 break;
             }
           } else if (input.isKeyPressed(Key.Defend)) {
@@ -805,7 +806,7 @@ uibattle.update = function*() {
             switch (w) {
               case 2: // item
                 Global.battle.UI.menuState = BattleMenuState.MiscItemSubMenu;
-                curSubMenuItem = 0;
+                uibattle.curSubMenuItem = 0;
                 break;
 
               case 3: // defend
@@ -892,7 +893,7 @@ uibattle.update = function*() {
       }
 
       // Highlight the selected enemy
-      if (frame & 1) {
+      if (uibattle.frame & 1) {
         var i = Global.battle.UI.selectedIndex;
         var enemy = Global.battle.enemy[i];
 
@@ -938,7 +939,7 @@ uibattle.update = function*() {
       }
 
       var j = SPRITENUM_BATTLE_ARROW_SELECTEDPLAYER;
-      if (frame & 1) {
+      if (uibattle.frame & 1) {
         j = SPRITENUM_BATTLE_ARROW_SELECTEDPLAYER_RED;
       }
 
@@ -979,7 +980,7 @@ uibattle.update = function*() {
         }
       }
 
-      if (frame & 1) {
+      if (uibattle.frame & 1) {
         // Highlight all enemies
         for (var i = Global.battle.maxEnemyIndex; i >= 0; i--) {
           var enemy = Global.battle.enemy[i];
@@ -1006,10 +1007,12 @@ uibattle.update = function*() {
 
     case BattleUIState.SelectTargetPlayerAll:
       // Don't bother selecting
-      Global.battle.UI.selectedIndex = (WORD)-1;
+      Global.battle.UI.selectedIndex = -1;
       battle.commitAction(false);
       break;
   }
+
+  return end();
 
   function end() {
     // Show the text message if there is one.
