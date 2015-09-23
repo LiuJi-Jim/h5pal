@@ -1224,6 +1224,7 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
       break;
     case 0x0067:
       script.debug('[SCRIPT] Enemy use magic');
+      //debugger;
       Global.battle.enemy[eventObjectID].e.magic = sc.operand[0];
       Global.battle.enemy[eventObjectID].e.magicRate = ((sc.operand[1] == 0) ? 10 : sc.operand[1]);
       break;
@@ -1687,7 +1688,7 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
       break;
     case 0x009C:
       script.debug('[SCRIPT] Enemy duplicate itself');
-      debugger
+      //debugger
       w = 0;
       for (i = 0; i <= Global.battle.maxEnemyIndex; i++) {
         if (Global.battle.enemy[i].objectID != 0) {
@@ -1744,7 +1745,7 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
       break;
     case 0x009E:
       script.debug('[SCRIPT] Enemy summons another monster');
-      debugger
+      //debugger
       x = 0;
       w = sc.operand[0];
       y = (SHORT(sc.operand[1]) <= 0 ? 1 : SHORT(sc.operand[1]));
@@ -1938,6 +1939,9 @@ script.runTriggerScript = function*(scriptEntry, eventObjectID) {
         break;
       case 0x0002:
         //script.debug('[SCRIPT] Stop running and replace the entry with the specified one');
+        if (!evtObj) {
+          //debugger;
+        }
         evtObj.scriptIdleFrame++;
         if (sc.operand[1] === 0 || evtObj.scriptIdleFrame < sc.operand[1]) {
           ended = true;
