@@ -600,6 +600,8 @@ fight.init = function*(surf, _battle) {
    * @return {Number}                The base damage value of the attacking.
    */
   battle.calcBaseDamage = function(attackStrength, defense) {
+    // TODO 这里有时候defense超大，而且是在GameData.enemy里就很大，只能先让它溢出为负数了
+    defense = SHORT(defense);
     // Formula courtesy of palxex and shenyanduxing
     if (attackStrength > defense) {
       return SHORT(~~(attackStrength * 2 - defense * 1.6 + 0.5));
