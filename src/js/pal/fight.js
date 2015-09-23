@@ -1,5 +1,7 @@
+import ajax from './ajax';
 import input from './input';
 import script from './script';
+import Sprite from './sprite';
 import uibattle from './uibattle';
 import sound from './sound';
 import utils from './utils';
@@ -15,6 +17,9 @@ fight.init = function*(surf, _battle) {
   log.debug('[BATTLE] init fight');
   surface = surf;
   battle = _battle;
+
+  yield ajax.loadMKF('FIRE');
+  Files.FIRE = ajax.MKF.FIRE;
 
   /**
    * Pick an enemy target automatically.
@@ -1151,6 +1156,154 @@ fight.init = function*(surf, _battle) {
    */
   battle.showEnemyMagicAnim = function*(objectID, target) {
     log.debug(['[BATTLE] showEnemyMagicAnim', objectID, target].join(' '));
+    var magicNum = GameData.object[objectID].magic.magicNumber;
+    var effectNum = GameData.magic[magicNum].effect;
+
+    var effectSprite = new Sprite(Files.FIRE.decompressChunk(effectNum));
+
+    var n = effectSprite.frameCount;
+
+    var l = n - GameData.magic[magicNum].soundDelay;
+    l *= SHORT(GameData.magic[magicNum].effectTimes);
+    l += n;
+    l += GameData.magic[magicNum].shake;
+
+    var wave = Global.screenWave;
+    Global.screenWave += GameData.magic[magicNum].wave;
+    var x, y;
+
+    for (var i = 0; i < l; i++) {
+      var rle;
+
+      var blow = ((Global.battle.blow > 0) ? randomLong(0, Global.battle.blow) : randomLong(Global.battle.blow, 0));
+
+      for (var k = 0; k <= Global.maxPartyMemberIndex; k++) {
+        x = PAL_X(Global.battle.player[k].pos) + blow;
+        y = PAL_Y(Global.battle.player[k].pos) + ~~(blow / 2);
+
+        Global.battle.player[k].pos = PAL_XY(x, y);
+      }
+
+      if (l - i > GameData.magic[magicNum].shake) {
+        if (i < n) {
+          k = i;
+        } else {
+          k = i - GameData.magic[magicNum].soundDelay;
+          k %= n - GameData.magic[magicNum].soundDelay;
+          k += GameData.magic[magicNum].soundDelay;
+        }
+
+        rle = effectSprite.getFrame(k);
+
+        if (i == GameData.magic[magicNum].soundDelay) {
+          sound.play(GameData.magic[magicNum].sound);
+        }
+      } else {
+        yield surface.shakeScreen(i, 3)
+        rle = effectSprite.getFrame((l - GameData.magic[magicNum].shake - 1) % n);
+      }
+
+      battle.makeScene();
+      surface.blitSurface(Global.battle.sceneBuf, null, surface.byteBuffer, null);
+
+      if (GameData.magic[magicNum].type == MagicType.Normal) {
+        if (target == -1) {
+          throw 'should not be here';
+        }
+
+        x = PAL_X(Global.battle.player[target].pos);
+        y = PAL_Y(Global.battle.player[target].pos);
+
+        x += SHORT(GameData.magic[magicNum].offsetX);
+        y += SHORT(GameData.magic[magicNum].offsetY);
+
+        surface.blitRLE(
+          rle,
+          PAL_XY(x - ~~(rle.width / 2), y - rle.height)
+        );
+
+        if (i == l - 1 && Global.screenWave < 9 && GameData.magic[magicNum].keepEffect == 0xFFFF) {
+          surface.blitRLE(
+            rle,
+            PAL_XY(x - ~~(rle.width / 2), y - rle.height),
+            Global.battle.background
+          );
+        }
+      }
+      else if (GameData.magic[magicNum].type == MagicType.AttackAll) {
+        var effectPos = [ [180, 180], [234, 170], [270, 146]];
+
+        if (target != -1) {
+          throw 'should not be here';
+        }
+
+        for (var k = 0; k < 3; k++) {
+          x = effectPos[k][0];
+          y = effectPos[k][1];
+
+          x += SHORT(GameData.magic[magicNum].offsetX);
+          y += SHORT(GameData.magic[magicNum].offsetY);
+
+          surface.blitRLE(
+            rle,
+            PAL_XY(x - ~~(rle.width / 2), y - rle.height)
+          );
+
+          if (i == l - 1 && Global.screenWave < 9 && GameData.magic[magicNum].keepEffect == 0xFFFF) {
+            surface.blitRLE(
+              rle,
+              PAL_XY(x - ~~(rle.width / 2), y - rle.height),
+              Global.battle.background
+            );
+          }
+        }
+      } else if (GameData.magic[magicNum].type == MagicType.AttackWhole ||
+                 GameData.magic[magicNum].type == MagicType.AttackField) {
+        if (target != -1) {
+          throw 'should not be here';
+        }
+
+        if (GameData.magic[magicNum].type == MagicType.AttackWhole) {
+          x = 240;
+          y = 150;
+        } else {
+          x = 160;
+          y = 200;
+        }
+
+        x += SHORT(GameData.magic[magicNum].offsetX);
+        y += SHORT(GameData.magic[magicNum].offsetY);
+
+
+        surface.blitRLE(
+          rle,
+          PAL_XY(x - ~~(rle.width / 2), y - rle.height)
+        );
+
+        if (i == l - 1 && Global.screenWave < 9 && GameData.magic[magicNum].keepEffect == 0xFFFF) {
+          surface.blitRLE(
+            rle,
+            PAL_XY(x - ~~(rle.width / 2), y - rle.height),
+            Global.battle.background
+          );
+        }
+      } else {
+        throw 'should not be here';
+      }
+
+      yield uibattle.update();
+
+      surface.updateScreen(null);
+
+      yield sleepByFrame(1);
+    }
+
+    Global.screenWave = wave;
+    yield surface.shakeScreen(0, 0);
+
+    for (var i = 0; i <= Global.maxPartyMemberIndex; i++) {
+      Global.battle.player[i].pos = Global.battle.player[i].originalPos;
+    }
   };
 
   /**
@@ -1978,9 +2131,8 @@ fight.init = function*(surf, _battle) {
       return end();
     } else if (enemy.status[PlayerStatus.Confused] > 0) {
       // TODO
-    }
-    else if (magic != 0 && randomLong(0, 9) < enemy.e.magicRate &&
-             enemy.status[PlayerStatus.Silence] == 0) {
+    } else if (magic != 0 && randomLong(0, 9) < enemy.e.magicRate &&
+      enemy.status[PlayerStatus.Silence] == 0) {
       // Magical attack
       if (magic == 0xFFFF) {
         // Do nothing
@@ -2370,6 +2522,8 @@ fight.init = function*(surf, _battle) {
 
       yield battle.postActionCheck(true);
     }
+
+    return end();
 
     function end() {
       // nothing
