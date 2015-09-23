@@ -488,10 +488,10 @@ function typeArray2DGetter(type, len1, len2, offset, name) {
     var ret = this[key];
     if (!ret) {
       ret = [];
-      for (var i=0; i<len1; ++i) {
+      ret.uint8Array = this.uint8Array.subarray(offset, offset + type.size * len1 * len2);
+      for (var i = 0; i < len1; ++i, offset += type.size * len2) {
         ret.push(readTypedArray(type, this.uint8Array.subarray(offset, offset + type.size * len2)));
       }
-      ret.uint8Array = this.uint8Array.subarray(offset, offset + type.size * len1 * len2);
       this[key] = ret;
     }
     return ret;
@@ -502,7 +502,7 @@ var readTypedArray = global.readTypedArray = function(type, buf) {
   var size = type.size;
   var len = buf.byteLength / size;
   var list = [];
-  for (var i=0, offset=0; i<len; i++,offset+=size) {
+  for (var i = 0, offset = 0; i < len; i++, offset += size) {
     list.push(new type(buf.subarray(offset, offset + size)));
   }
   return list;

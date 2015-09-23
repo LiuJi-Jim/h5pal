@@ -287,7 +287,6 @@ rng.blitToSurface = function(rngNum, frameNum) {
 
 rng.play = function*(rngNum, startFrame, endFrame, speed) {
   log.debug('play rng', rngNum, startFrame, endFrame, speed);
-  var delay = 800 / (speed === 0 ? 16 : speed);
 
   for (; startFrame <= endFrame; startFrame++){
     if (!rng.blitToSurface(rngNum, startFrame)) {
@@ -305,7 +304,7 @@ rng.play = function*(rngNum, startFrame, endFrame, speed) {
     }
 
     // Delay for a while
-    yield sleep(delay);
+    yield sleep(800 / (speed === 0 ? 16 : speed));
   }
 };
 

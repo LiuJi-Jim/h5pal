@@ -47,11 +47,11 @@ for (var name in LogLevel) {
  * @global
  * @type {Number}
  */
-global.GameSpeed = 1;
+global.GameSpeed = 2;
 
 global.FPS = 24;
 
-global.FrameTime = (1000 / global.FPS) / global.GameSpeed;
+global.FrameTime = (1000 / global.FPS);
 
 /* 坐标相关 */
 /**
@@ -221,7 +221,7 @@ global.randomFloat = function(min, max) {
  */
 global.sleep = function(ms) {
   return new Promise(function(resolve) {
-    setTimeout(resolve, ms);
+    setTimeout(resolve, ms / GameSpeed);
   })
 };
 
@@ -233,7 +233,7 @@ global.sleep = function(ms) {
  */
 global.sleepByFrame = function(frames) {
   return new Promise(function(resolve) {
-    setTimeout(resolve, global.FrameTime * frames);
+    setTimeout(resolve, global.FrameTime * frames / GameSpeed);
   });
 };
 

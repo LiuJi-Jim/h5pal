@@ -209,7 +209,7 @@ game.main = function*() {
     }
     yield res.loadResources();
     input.clear();
-    yield sleep(FrameTime);
+    yield sleepByFrame(1);
     //try {
       yield play.startFrame();
     //} catch(ex) {

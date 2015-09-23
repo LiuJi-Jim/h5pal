@@ -543,9 +543,6 @@ battle.loadBattleSprites = function() {
 
     y += enemy.e.yPosOffset;
 
-    // console.log('calc enemy pos', i, x, y, enemy.e.yPosOffset);
-    // TODO still buggy
-
     enemy.originalPos = PAL_XY(x, y);
     enemy.pos = PAL_XY(x, y);
   }
