@@ -95,7 +95,7 @@ game.loadGame = function*(slot) {
   // Read all data from the file and close.
   try {
     var buf = new Uint8Array((yield ajax.load(slot + '.RPG'))[0]);
-    var s = new SaveData(buf);
+    var s = (new SaveData(buf)).copy();
   } catch(ex) {
     return false;
   }
