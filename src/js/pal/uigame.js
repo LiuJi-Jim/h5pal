@@ -14,10 +14,12 @@ var uigame = {};
 
 var surface = null;
 var ui = null;
+var itemmenu = null;
 
 uigame.init = function*(surf, _ui) {
   log.debug('[UI] init uigame');
   ui = _ui;
+  itemmenu = ui.itemmenu;
   global.uigame = ui.uigame = uigame;
   surface = surf;
 };

@@ -533,7 +533,7 @@ fight.init = function*(surf, _battle) {
         var w = curPlayer.action.actionID;
         w = GameData.magic[GameData.object[w].magic.magicNumber].costMP;
 
-        if (GameData.playerRoles.MP[Global.player[Global.battle.UI.curPlayerIndex].playerRole] < w) {
+        if (GameData.playerRoles.MP[Global.party[Global.battle.UI.curPlayerIndex].playerRole] < w) {
           w = curPlayer.action.actionID;
           w = GameData.magic[GameData.object[w].magic.magicNumber].type;
           if (w == MagicType.ApplyToPlayer || w == MagicType.ApplyToParty ||
@@ -1137,6 +1137,109 @@ fight.init = function*(surf, _battle) {
    */
   battle.showPlayerDefMagicAnim = function*(playerIndex, objectID, target) {
     log.debug(['[BATTLE] showPlayerDefMagicAnim', playerIndex, objectID, target].join(' '));
+    var magicNum = GameData.object[objectID].magic.magicNumber;
+    var effectNum = GameData.magic[magicNum].effect;
+
+    var effectSprite = new Sprite(Files.FIRE.decompressChunk(effectNum));
+    var n = effectSprite.frameCount;
+
+    var sceneBuf = Global.battle.sceneBuf;
+    var screen = surface.byteBuffer;
+
+    var i, l, x, y;
+
+    Global.battle.player[playerIndex].currentFrame = 6;
+    yield battle.delay(1, 0, true);
+
+    for (i = 0; i < n; i++) {
+      var frame = effectSprite.getFrame(i);
+
+      if (i == GameData.magic[magicNum].soundDelay) {
+         sound.play(GameData.magic[magicNum].sound);
+      }
+
+      battle.makeScene();
+      surface.blitSurface(sceneBuf, null, screen, null);
+
+      if (GameData.magic[magicNum].type == MagicType.ApplyToParty) {
+        if (target != -1) {
+          throw 'should not be here';
+        }
+        for (l = 0; l <= Global.maxPartyMemberIndex; l++) {
+          x = PAL_X(Global.battle.player[l].pos);
+          y = PAL_Y(Global.battle.player[l].pos);
+
+          x += SHORT(GameData.magic[magicNum].offsetX);
+          y += SHORT(GameData.magic[magicNum].offsetY);
+
+          surface.blitRLE(
+            frame,
+            PAL_XY(x - ~~(frame.width / 2), y - frame.height)
+          );
+        }
+      } else if (GameData.magic[magicNum].type == MagicType.ApplyToPlayer) {
+        if (target == -1) {
+          throw 'should not be here';
+        }
+
+        x = PAL_X(Global.battle.player[target].pos);
+        y = PAL_Y(Global.battle.player[target].pos);
+
+        x += SHORT(GameData.magic[magicNum].offsetX);
+        y += SHORT(GameData.magic[magicNum].offsetY);
+
+        surface.blitRLE(
+          frame,
+          PAL_XY(x - ~~(frame.width / 2), y - frame.height)
+        );
+
+        // Repaint the previous player
+        if (target > 0 && Global.battle.hidingTime == 0) {
+          if (Global.playerStatus[Global.party[target - 1].playerRole][PlayerStatus.Confused] == 0) {
+            var targetPlayer = Global.battle.player[target - 1];
+            var p = targetPlayer.sprite.getFrame(targetPlayer.currentFrame)
+            x = PAL_X(targetPlayer.pos);
+            y = PAL_Y(targetPlayer.pos);
+
+            x -= ~~(p.width / 2);
+            y -= p.height;
+
+            surface.blitRLE(p, PAL_XY(x, y));
+          }
+        }
+      } else {
+        throw 'should not be here';
+      }
+
+      yield uibattle.update();
+      surface.updateScreen(null);
+
+      yield sleepByFrame(1);
+    }
+
+    for (i = 0; i < 6; i++) {
+      if (GameData.magic[magicNum].type == MagicType.ApplyToParty) {
+        for (j = 0; j <= Global.maxPartyMemberIndex; j++) {
+          Global.battle.player[j].colorShift = i;
+        }
+      } else {
+         Global.battle.player[target].colorShift = i;
+      }
+
+      yield battle.delay(1, 0, true);
+    }
+
+    for (i = 6; i >= 0; i--) {
+      if (GameData.magic[magicNum].type == MagicType.ApplyToParty) {
+        for (j = 0; j <= Global.maxPartyMemberIndex; j++) {
+          Global.battle.player[j].colorShift = i;
+        }
+      } else {
+        Global.battle.player[target].colorShift = i;
+      }
+
+      yield battle.delay(1, 0, true);
+    }
   };
 
   /**
@@ -1320,6 +1423,40 @@ fight.init = function*(surf, _battle) {
    */
   battle.showPostMagicAnim = function*() {
     log.debug(['[BATTLE] showPostMagicAnim'].join(' '));
+    var dist = 8;
+    var enemyPosBak = new Array(Const.MAX_ENEMIES_IN_TEAM);
+
+    for (var i = 0; i < Const.MAX_ENEMIES_IN_TEAM; i++) {
+      enemyPosBak[i] = Global.battle.enemy[i].pos;
+    }
+
+    for (var i = 0; i < 3; i++) {
+      for (var j = 0; j <= Global.battle.maxEnemyIndex; j++) {
+        var enemy = Global.battle.enemy[j];
+        if (enemy.e.health == enemy.prevHP) {
+          continue;
+        }
+
+        var x = PAL_X(enemy.pos);
+        var y = PAL_Y(enemy.pos);
+
+        x -= dist;
+        y -= ~~(dist / 2);
+
+        enemy.pos = PAL_XY(x, y);
+
+        enemy.colorShift = ((i == 1) ? 6 : 0);
+      }
+
+      yield battle.delay(1, 0, true);
+      dist = ~~(dist / -2);
+    }
+
+    for (var i = 0; i < Const.MAX_ENEMIES_IN_TEAM; i++) {
+      Global.battle.enemy[i].pos = enemyPosBak[i];
+    }
+
+    yield battle.delay(1, 0, true);
   };
 
   /**
@@ -1329,7 +1466,7 @@ fight.init = function*(surf, _battle) {
   battle.playerValidateAction = function(playerIndex) {
     log.debug(['[BATTLE] playerValidateAction', playerIndex].join(' '));
     var playerRole = Global.party[playerIndex].playerRole;
-    var objectID = Global.battle.player[playerIndex].action.wActionID;
+    var objectID = Global.battle.player[playerIndex].action.actionID;
     var target = Global.battle.player[playerIndex].action.target;
     var valid = true;
     var toEnemy = false;

@@ -7,8 +7,6 @@
 import utils from './utils';
 import input from './input';
 import uigame from './uigame';
-import itemmenu from './itemmenu';
-import magicmenu from './magicmenu';
 
 log.trace('uibattle module load');
 
@@ -75,11 +73,15 @@ uibattle.TIMEMETER_COLOR_HASTE                     = 0x2A;
 var surface = null;
 var battle = null;
 var ui = null;
+var itemmenu = null;
+var magicmenu = null;
 
 uibattle.init = function*(surf, _battle, _ui) {
   log.debug('[BATTLE] init uibattle');
   battle = _battle;
   ui = _ui;
+  itemmenu = ui.itemmenu;
+  magicmenu = ui.magicmenu;
   global.uibattle = ui.uibattle = uibattle;
   surface = surf;
 };
@@ -941,7 +943,7 @@ uibattle.update = function*() {
       var x = battle.playerPos[Global.maxPartyMemberIndex][Global.battle.UI.selectedIndex][0] - 8;
       var y = battle.playerPos[Global.maxPartyMemberIndex][Global.battle.UI.selectedIndex][1] - 67;
 
-      surface.blitRLE(ui.sprite.getFrame(j), gpScreen, PAL_XY(x, y));
+      surface.blitRLE(ui.sprite.getFrame(j), PAL_XY(x, y));
 
       if (input.isKeyPressed(Key.Menu)) {
          Global.battle.UI.state = BattleUIState.SelectMove;
