@@ -5,13 +5,7 @@
  */
 
 import utils from './utils';
-import MKF from './MKF';
-import RLE from './RLE';
-import Palette from './palette';
-import Sprite from './sprite';
 import ajax from './ajax';
-import music from './music';
-import text from './text';
 import input from './input';
 
 log.trace('uigame module load');
@@ -413,7 +407,7 @@ uigame.inGameMagicMenu = function*() {
 
   var magic = 0;
   while (true) {
-    magic = yield ui.magicmenu.magicSelectionMenu(
+    magic = yield ui.magicmenu.magicSelectMenu(
       Global.party[w].playerRole,
       false,
       magic

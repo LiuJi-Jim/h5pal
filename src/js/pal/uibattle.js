@@ -5,17 +5,10 @@
  */
 
 import utils from './utils';
-import MKF from './MKF';
-import RLE from './RLE';
-import Palette from './palette';
-import Sprite from './sprite';
-import ajax from './ajax';
-import music from './music';
-import text from './text';
 import input from './input';
-import ui from './ui';
-import itemmenu from './itemmenu';
 import uigame from './uigame';
+import itemmenu from './itemmenu';
+import magicmenu from './magicmenu';
 
 log.trace('uibattle module load');
 
@@ -67,10 +60,6 @@ var BATTLEUI_LABEL_STATUS                     = 60;
 var BATTLEUI_LABEL_USEITEM                    = 23;
 var BATTLEUI_LABEL_THROWITEM                  = 24;
 
-var TIMEMETER_COLOR_DEFAULT                   = 0x1B;
-var TIMEMETER_COLOR_SLOW                      = 0x5B;
-var TIMEMETER_COLOR_HASTE                     = 0x2A;
-
 var BATTLEUI_MAX_SHOWNUM                      = 16;
 
 var uibattle = {
@@ -79,12 +68,18 @@ var uibattle = {
   curSubMenuItem: 0
 };
 
+uibattle.TIMEMETER_COLOR_DEFAULT                   = 0x1B;
+uibattle.TIMEMETER_COLOR_SLOW                      = 0x5B;
+uibattle.TIMEMETER_COLOR_HASTE                     = 0x2A;
+
 var surface = null;
 var battle = null;
+var ui = null;
 
-uibattle.init = function*(surf, _battle) {
+uibattle.init = function*(surf, _battle, _ui) {
   log.debug('[BATTLE] init uibattle');
   battle = _battle;
+  ui = _ui;
   global.uibattle = ui.uibattle = uibattle;
   surface = surf;
 };
@@ -510,7 +505,7 @@ uibattle.update = function*() {
     {
       var playerRole = Global.party[i].playerRole;
       var w = WORD(Global.battle.player[i].timeMeter);
-      var j = TIMEMETER_COLOR_DEFAULT;
+      var j = uibattle.TIMEMETER_COLOR_DEFAULT;
 
       if (Global.playerStatus[playerRole][PlayerStatus.Sleep] != 0 ||
           Global.playerStatus[playerRole][PlayerStatus.Confused] != 0 ||
@@ -653,7 +648,6 @@ uibattle.update = function*() {
               case 1:
                 // Magic
                 Global.battle.UI.menuState = BattleMenuState.MagicSelect;
-                // TODO
                 magicmenu.magicSelectMenuInit(playerRole, true, 0);
                 break;
 

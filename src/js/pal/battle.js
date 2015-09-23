@@ -224,7 +224,7 @@ battle.init = function*(surf) {
   Files.F = ajax.MKF.F;
 
   yield fight.init(surf, battle);
-  yield uibattle.init(surf, battle);
+  yield uibattle.init(surf, battle, ui);
 
   Global.battle = new Battle();
 };

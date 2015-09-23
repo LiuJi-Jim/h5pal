@@ -1,18 +1,6 @@
-/**
- * Game UI
- * @module
- * @memberOf  ui
- */
-
 import utils from './utils';
-import MKF from './MKF';
-import RLE from './RLE';
-import Palette from './palette';
-import Sprite from './sprite';
-import ajax from './ajax';
-import music from './music';
-import text from './text';
 import input from './input';
+import scene from './scene';
 
 log.trace('itemmenu module load');
 

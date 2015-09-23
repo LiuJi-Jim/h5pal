@@ -4,13 +4,13 @@
  */
 
 import utils from './utils';
-import MKF from './MKF';
 import Sprite from './Sprite';
 import ajax from './ajax';
 import input from './input';
 import text from './text';
 import uigame from './uigame';
 import itemmenu from './itemmenu';
+import magicmenu from './magicmenu';
 
 log.trace('ui module load');
 
@@ -38,6 +38,7 @@ ui.init = function*(surf) {
 
   yield text.init(surf, ui);
   yield itemmenu.init(surf, ui);
+  yield magicmenu.init(surf, ui);
   yield uigame.init(surf, ui);
 };
 
