@@ -849,7 +849,7 @@ battle.start = function*(enemyTeam, isBoss) {
     }
 
     if (w != 0) {
-      enemy.e = GameData.enemy[GameData.object[w].enemy.enemyID];
+      enemy.e = GameData.enemy[GameData.object[w].enemy.enemyID].copy();
       enemy.objectID = w;
       enemy.state = FighterState.Wait;
       enemy.scriptOnTurnStart = GameData.object[w].enemy.scriptOnTurnStart;
