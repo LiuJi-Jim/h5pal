@@ -1719,7 +1719,7 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
           Global.battle.enemy[i].scriptOnTurnStart = Global.battle.enemy[eventObjectID].scriptOnTurnStart;
           Global.battle.enemy[i].scriptOnBattleEnd = Global.battle.enemy[eventObjectID].scriptOnBattleEnd;
           Global.battle.enemy[i].scriptOnReady = Global.battle.enemy[eventObjectID].scriptOnReady;
-          Global.battle.enemy[i].state = Const.FighterState.Wait;
+          Global.battle.enemy[i].state = FighterState.Wait;
           Global.battle.enemy[i].timerMeter = 50;
           Global.battle.enemy[i].colorShift = 0;
         }
@@ -1733,8 +1733,8 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
       }
       for (i = 0; i < 10; i++) {
         for (j = 0; j <= Global.battle.maxEnemyIndex; j++) {
-          x = floor((PAL_X(Global.battle.enemy[j].pos) + PAL_X(Global.battle.enemy[j].posOriginal)) / 2);
-          y = floor((PAL_Y(Global.battle.enemy[j].pos) + PAL_Y(Global.battle.enemy[j].posOriginal)) / 2);
+          x = floor((PAL_X(Global.battle.enemy[j].pos) + PAL_X(Global.battle.enemy[j].originalPos)) / 2);
+          y = floor((PAL_Y(Global.battle.enemy[j].pos) + PAL_Y(Global.battle.enemy[j].originalPos)) / 2);
           Global.battle.enemy[j].pos = PAL_XY(x, y);
         }
         yield battle.delay(1, 0, true);
@@ -1772,7 +1772,7 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
             Global.battle.enemy[i].objectID = w;
             Global.battle.enemy[i].e = GameData.enemy[GameData.object[w].enemy.enemyID];
 
-            Global.battle.enemy[i].state = Const.FighterState.Wait;
+            Global.battle.enemy[i].state = FighterState.Wait;
             Global.battle.enemy[i].scriptOnTurnStart = GameData.object[w].enemy.scriptOnTurnStart;
             Global.battle.enemy[i].scriptOnBattleEnd = GameData.object[w].enemy.scriptOnBattleEnd;
             Global.battle.enemy[i].scriptOnReady = GameData.object[w].enemy.scriptOnReady;
