@@ -6,6 +6,7 @@
 
 import utils from './utils';
 import ajax from './ajax';
+import RLE from './rle';
 import input from './input';
 
 log.trace('uigame module load');
