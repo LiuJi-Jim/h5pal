@@ -35,9 +35,9 @@ h5pal
 
 ## 一句话，我TM就想知道能玩吗？
 
-能走，能对话，能开宝箱，能用道具……能做很多事情，排除BUG造成剧情无法进行下去以外，只靠走地图可以体验很多很多剧情……了。
+能走，能对话，能开宝箱，能用道具，能打架（没完全实现）……能做很多事情，排除BUG造成剧情无法进行下去以外，只靠走地图可以体验很多很多剧情……了。
 
-等等，没实现战斗系统？那遇敌了怎么办？`return true;`啊233！
+因为战斗系统有很多没实现以及很多BUG，当出错的时候会直接判定为赢。建议到`common.js`里打开`INVINCIBLE`开启无敌降低游戏难度。
 
 ## 没图你说个JB
 
@@ -57,10 +57,10 @@ h5pal
 | 场景 | 90% |
 | 调色盘 | 90% |
 | 文本 | 99% |
-| 脚本（天坑） | 50% |
-| 平常UI | 50% |
-| 战斗UI | 10% |
-| 战斗（天坑） | 20% |
+| 脚本（天坑） | 70% |
+| 平常UI | 70% |
+| 战斗UI | 30% |
+| 战斗（天坑） | 40% |
 | 播片 | 90% |
 | 结局 | 95% |
 | 音乐 | 0% |
@@ -115,9 +115,9 @@ GPL v3
 
 ## I'm just wondering whether I can play it or not.
 
-You can walk, talk, open chests, use items ... a lot of thing in this game. Without some bugs crashing the game, you can experience the story well.
+You can walk, talk, open chests, use items, fight ... a lot of thing in this game. Without some bugs crashing the game, you can experience the story well.
 
-Eh wait, no battle system? What about encounters? `return true;` LoL.
+Due to the completeness and bugs of battle module, you will be judged as win when exception happens. I strongly advise you to turn on `INVINCIBLE` in `common.js` to make the game easier.
 
 ## STFU without pictures
 
@@ -137,10 +137,10 @@ Eh wait, no battle system? What about encounters? `return true;` LoL.
 | Scene | 90% |
 | Palette | 90% |
 | Text | 99% |
-| Script (OMG) | 50% |
-| Game UI | 50% |
-| Battle UI | 10% |
-| Battle (OMG) | 20% |
+| Script (OMG) | 70% |
+| Game UI | 70% |
+| Battle UI | 30% |
+| Battle (OMG) | 40% |
 | Movie | 90% |
 | Ending | 95% |
 | Music | 0% |
