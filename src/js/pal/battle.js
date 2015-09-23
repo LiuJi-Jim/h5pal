@@ -848,7 +848,8 @@ battle.start = function*(enemyTeam, isBoss) {
       break;
     }
 
-    if (w != 0) {
+    //if (w != 0) {
+    // WTF？怎么会这样，这里把条件去掉以后会莫名其妙的少了好多BUG
       enemy.e = GameData.enemy[GameData.object[w].enemy.enemyID].copy();
       enemy.objectID = w;
       enemy.state = FighterState.Wait;
@@ -856,7 +857,7 @@ battle.start = function*(enemyTeam, isBoss) {
       enemy.scriptOnBattleEnd = GameData.object[w].enemy.scriptOnBattleEnd;
       enemy.scriptOnReady = GameData.object[w].enemy.scriptOnReady;
       enemy.colorShift = 0;
-    }
+    //}
   }
 
   Global.battle.maxEnemyIndex = i - 1;
@@ -925,7 +926,12 @@ battle.start = function*(enemyTeam, isBoss) {
   //#endif
 
   // Run the main battle routine.
+  try {
   var result = yield battle.main();
+} catch(ex) {
+  log.fatal(['BATTLE exception during battle', ex, 'skip this battle'].join(' '));
+  var result = BattleResult.Won;
+}
 
   //#ifdef PAL_ALLOW_KEYREPEAT
   //SDL_EnableKeyRepeat(0, 0);
