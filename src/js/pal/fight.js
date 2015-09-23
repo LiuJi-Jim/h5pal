@@ -2045,7 +2045,7 @@ fight.init = function*(surf, _battle) {
 
         if (GameData.magic[magicNum].type == MagicType.Summon) {
           yield battle.showPlayerPreMagicAnim(playerIndex, true);
-          yield battle.showPlayerSummonMagicAnim(WORD(-1), object);
+          yield battle.showPlayerSummonMagicAnim(-1, object);
         } else {
           for (var i = 1; i <= 6; i++) {
             // Update the position for the player who invoked the action
@@ -2104,7 +2104,7 @@ fight.init = function*(surf, _battle) {
           Global.battle.player[playerIndex].colorShift = 0;
           yield battle.delay(3, 0, true);
 
-          yield battle.showPlayerOffMagicAnim(WORD(-1), object, target);
+          yield battle.showPlayerOffMagicAnim(-1, object, target);
         }
 
         for (var i = 0; i <= Global.maxPartyMemberIndex; i++) {

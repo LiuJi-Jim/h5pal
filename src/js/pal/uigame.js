@@ -8,6 +8,7 @@ import utils from './utils';
 import ajax from './ajax';
 import RLE from './rle';
 import input from './input';
+import music from './music';
 
 log.trace('uigame module load');
 
@@ -40,7 +41,7 @@ uigame.drawOpeningMenuBackground = function*() {
  * @return {Promise}
  */
 uigame.openingMenu = function*() {
-  //music.play(ui.RIX_NUM_OPENINGMENU, true, 1);
+  music.play(ui.RIX_NUM_OPENINGMENU, true, 1);
   yield uigame.drawOpeningMenuBackground();
 
   var menu = [

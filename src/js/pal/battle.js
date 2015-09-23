@@ -263,6 +263,10 @@ battle.makeScene = function() {
     if (enemy.objectID == 0) {
       continue;
     }
+    if (!enemy.sprite) {
+      // 当敌人是召唤或者复制出的时候似乎有这个问题
+      continue;
+    }
     var pos = enemy.pos;
 
     if (enemy.status[PlayerStatus.Confused] > 0 &&
@@ -360,7 +364,6 @@ battle.backupScene = function() {
 battle.fadeScene = function*() {
   var indices = [0, 3, 1, 5, 2, 4];
 
-  time = SDL_GetTicks();
   var backup = surface.backup;
   var screen = surface.byteBuffer;
 
@@ -540,7 +543,8 @@ battle.loadBattleSprites = function() {
 
     y += enemy.e.yPosOffset;
 
-    console.log('calc enemy pos', i, x, y, enemy.e.yPosOffset);
+    // console.log('calc enemy pos', i, x, y, enemy.e.yPosOffset);
+    // TODO still buggy
 
     enemy.originalPos = PAL_XY(x, y);
     enemy.pos = PAL_XY(x, y);

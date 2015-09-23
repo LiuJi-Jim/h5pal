@@ -4,6 +4,7 @@ import script_extras from './script-extras';
 import res from './res';
 import rng from './rng';
 import music from './music';
+import sound from './sound';
 
 log.trace('script module load');
 
@@ -1028,8 +1029,7 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
       break;
     case 0x0047:
       script.debug('[SCRIPT] Play sound effect');
-      // WARNING TODO
-      // yield sound.play(sc.operand[0]);
+      sound.play(sc.operand[0]);
       break;
     case 0x0049:
       script.debug('[SCRIPT] Set the state of event object');
@@ -1688,7 +1688,6 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
       break;
     case 0x009C:
       script.debug('[SCRIPT] Enemy duplicate itself');
-      //debugger
       w = 0;
       for (i = 0; i <= Global.battle.maxEnemyIndex; i++) {
         if (Global.battle.enemy[i].objectID != 0) {
@@ -1709,14 +1708,12 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
       for (i = 0; i <= Global.battle.maxEnemyIndex; i++) {
         if (w > 0 && Global.battle.enemy[i].objectID == 0) {
           w--;
-          // WARNING TODO
           //memset(&(battle.enemy[i]), 0, sizeof(BATTLEENEMY));
           //battle.resetEnemy(i);
 
-          // TODO
-          //memset(battle.enemy[i].uint8Array, 0, battle.enemy[i].uint8Array.length);
+          Global.battle.enemy[i].reset();
           Global.battle.enemy[i].objectID = Global.battle.enemy[eventObjectID].objectID;
-          Global.battle.enemy[i].e = Global.battle.enemy[eventObjectID].e;
+          Global.battle.enemy[i].e = Global.battle.enemy[eventObjectID].e.copy();
           Global.battle.enemy[i].scriptOnTurnStart = Global.battle.enemy[eventObjectID].scriptOnTurnStart;
           Global.battle.enemy[i].scriptOnBattleEnd = Global.battle.enemy[eventObjectID].scriptOnBattleEnd;
           Global.battle.enemy[i].scriptOnReady = Global.battle.enemy[eventObjectID].scriptOnReady;
@@ -1745,7 +1742,6 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
       break;
     case 0x009E:
       script.debug('[SCRIPT] Enemy summons another monster');
-      //debugger
       x = 0;
       w = sc.operand[0];
       y = (SHORT(sc.operand[1]) <= 0 ? 1 : SHORT(sc.operand[1]));
@@ -1770,8 +1766,9 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
             //battle.resetEnemy(i);
             //memset(battle.enemy[i].uint8Array, 0, battle.enemy[i].uint8Array.length);
 
+            Global.battle.enemy[i].reset();
             Global.battle.enemy[i].objectID = w;
-            Global.battle.enemy[i].e = GameData.enemy[GameData.object[w].enemy.enemyID];
+            Global.battle.enemy[i].e = GameData.enemy[GameData.object[w].enemy.enemyID].copy();
 
             Global.battle.enemy[i].state = FighterState.Wait;
             Global.battle.enemy[i].scriptOnTurnStart = GameData.object[w].enemy.scriptOnTurnStart;
@@ -1789,14 +1786,14 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
         battle.backupScene();
         battle.loadBattleSprites();
         battle.makeScene();
-        yield sound.play(212);
+        sound.play(212);
         yield battle.fadeScene();
 
         for (i = 0; i <= Global.battle.maxEnemyIndex; i++) {
           Global.battle.enemy[i].colorShift = 0;
         }
 
-        Global.battle.backupScene();
+        battle.backupScene();
         battle.makeScene();
         yield battle.fadeScene();
       }
