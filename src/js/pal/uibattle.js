@@ -848,17 +848,17 @@ uibattle.update = function*() {
       break;
 
     case BattleUIState.SelectTargetEnemy:
-      var x = -1;
-      var y = 0;
+      var maxEnemyIndex = -1;
+      var enemyCount = 0;
 
       for (var i = 0; i <= Global.battle.maxEnemyIndex; i++) {
         if (Global.battle.enemy[i].objectID != 0) {
-          x = i;
-          y++;
+          maxEnemyIndex = i;
+          enemyCount++;
         }
       }
 
-      if (x == -1) {
+      if (maxEnemyIndex == -1) {
         Global.battle.UI.state = BattleUIState.SelectMove;
         break;
       }
@@ -871,21 +871,21 @@ uibattle.update = function*() {
       }
 
       // Don't bother selecting when only 1 enemy left
-      if (y == 1) {
-        Global.battle.UI.prevEnemyTarget = WORD(x);
+      if (enemyCount == 1) {
+        Global.battle.UI.prevEnemyTarget = WORD(maxEnemyIndex);
         battle.commitAction(false);
         break;
       }
-      if (Global.battle.UI.selectedIndex > x) {
-        Global.battle.UI.selectedIndex = x;
+      if (Global.battle.UI.selectedIndex > maxEnemyIndex) {
+        Global.battle.UI.selectedIndex = maxEnemyIndex;
       }
 
-      for (var i = 0; i <= x; i++) {
+      for (var i = 0; i <= maxEnemyIndex; i++) {
         if (Global.battle.enemy[Global.battle.UI.selectedIndex].objectID != 0) {
           break;
         }
         Global.battle.UI.selectedIndex++;
-        Global.battle.UI.selectedIndex %= (x + 1);
+        Global.battle.UI.selectedIndex %= (maxEnemyIndex + 1);
       }
 
       // Highlight the selected enemy
@@ -917,9 +917,9 @@ uibattle.update = function*() {
           }
         }
       } else if (input.isKeyPressed(Key.Right | Key.Up)) {
-        if (Global.battle.UI.selectedIndex < x) {
+        if (Global.battle.UI.selectedIndex < maxEnemyIndex) {
           Global.battle.UI.selectedIndex++;
-          while (Global.battle.UI.selectedIndex < x &&
+          while (Global.battle.UI.selectedIndex < maxEnemyIndex &&
                  Global.battle.enemy[Global.battle.UI.selectedIndex].objectID == 0) {
             Global.battle.UI.selectedIndex++;
           }
