@@ -5,6 +5,7 @@ import Sprite from './sprite';
 import input from './input';
 import script from './script';
 import music from './music';
+import sound from './sound';
 import fight from './fight';
 import ui from './ui';
 import uibattle from './uibattle';
@@ -787,14 +788,99 @@ battle.won = function*() {
  * Enemy flee the battle.
  */
 battle.enemyEscape = function*() {
+  sound.play(45);
 
+  var f = true;
+  // Show the animation
+  while (f) {
+    f = false;
+
+    for (j = 0; j <= Global.battle.wMaxEnemyIndex; j++) {
+      var enemy = Global.battle.rgEnemy[j];
+      if (enemy.objectID == 0) {
+        continue;
+      }
+
+      var x = PAL_X(enemy.pos) - 5;
+      var y = PAL_Y(enemy.pos);
+
+      enemy.pos = PAL_XY(x, y);
+
+      var frame = enemy.sprite.getFrame(0);
+      var w = frame.width;
+
+      if (x + w > 0) {
+        f = true;
+      }
+    }
+
+    battle.makeScene();
+    surface.blitSurface(Global.battle.sceneBuf, null, surface.byteBuffer, null);
+    surface.updateScreen(null);
+
+    yield sleepByFrame(1);
+  }
+
+  yield sleep(500)
+  Global.battle.battleResult = BattleResult.Terminated;
 };
 
 /**
  * Player flee the battle.
  */
 battle.playerEscape = function*() {
+  sound.play(45);
 
+  battle.updateFighters();
+  var playerRole;
+
+  for (var i = 0; i <= Global.maxPartyMemberIndex; i++) {
+    playerRole = Global.party[i].playerRole;
+
+    if (GameData.playerRoles.HP[playerRole] > 0) {
+      Global.battle.player[i].currentFrame = 0;
+    }
+  }
+
+  for (var i = 0; i < 16; i++) {
+    for (var j = 0; j <= Global.maxPartyMemberIndex; j++) {
+      playerRole = Global.party[j].playerRole;
+      var player = Global.battle.player[j];
+
+      if (GameData.playerRoles.HP[playerRole] > 0) {
+        // TODO: This is still not the same as the original game
+        switch (j) {
+          case 0:
+            if (Global.maxPartyMemberIndex > 0) {
+              player.pos = PAL_XY(PAL_X(player.pos) + 4, PAL_Y(player.pos) + 6);
+              break;
+            }
+
+          case 1:
+            player.pos = PAL_XY(PAL_X(player.pos) + 4, PAL_Y(player.pos) + 4);
+            break;
+
+          case 2:
+            player.pos = PAL_XY(PAL_X(player.pos) + 6, PAL_Y(player.pos) + 3);
+            break;
+
+          default:
+            throw 'should not be here';
+        }
+      }
+    }
+
+    yield battle.delay(1, 0, false);
+  }
+
+  // Remove all players from the screen
+  for (var i = 0; i <= Global.maxPartyMemberIndex; i++) {
+    Global.battle.player[i].pos = PAL_XY(9999, 9999);
+  }
+
+  yield battle.delay(1, 0, false);
+
+  Global.battle.battleResult = BattleResult.Fleed;
 };
 
 /**
