@@ -303,7 +303,35 @@ uibattle.isActionValid = function(actionType) {
  * @param  {Boolean} confirmed   true if confirmed, false if not.
  */
 uibattle.drawMiscMenu = function(currentItem, confirmed) {
+  var menuItems = [
+    //              value label                     enabled position
+    new ui.MenuItem(0,    BATTLEUI_LABEL_AUTO,      true,   PAL_XY(16, 32)),
+    new ui.MenuItem(1,    BATTLEUI_LABEL_INVENTORY, true,   PAL_XY(16, 50)),
+    new ui.MenuItem(2,    BATTLEUI_LABEL_DEFEND,    true,   PAL_XY(16, 68)),
+    new ui.MenuItem(3,    BATTLEUI_LABEL_FLEE,      true,   PAL_XY(16, 86)),
+    new ui.MenuItem(4,    BATTLEUI_LABEL_STATUS,    true,   PAL_XY(16, 104))
+  ];
 
+  // Draw the box
+  ui.createBox(PAL_XY(2, 20), 4, 1, 0, false);
+
+  // Draw the menu items
+  for (var i = 0; i < 5; i++) {
+    var color = ui.MENUITEM_COLOR;
+    if (i == currentItem) {
+      if (confirmed) {
+        color = ui.MENUITEM_COLOR_CONFIRMED;
+      } else {
+        color = ui.MENUITEM_COLOR_SELECTED;
+      }
+    }
+
+    ui.drawText(
+      ui.getWord(menuItems[i].wordNum),
+      menuItems[i].pos, color,
+      true, false
+    );
+  }
 };
 
 /**
@@ -311,7 +339,28 @@ uibattle.drawMiscMenu = function(currentItem, confirmed) {
  * @return {Number} The selected item number. 0 if cancelled, 0xFFFF if not confirmed.
  */
 uibattle.miscMenuUpdate = function() {
+  // Draw the menu
+  uibattle.drawMiscMenu(uibattle.curMiscMenuItem, false);
 
+  // Process inputs
+  if (input.isKeyPressed(Key.Up | Key.Left)) {
+    uibattle.curMiscMenuItem--;
+    if (uibattle.curMiscMenuItem < 0) {
+       uibattle.curMiscMenuItem = 4;
+    }
+  } else if (input.isKeyPressed(Key.Down | Key.Right)) {
+    uibattle.curMiscMenuItem++;
+    if (uibattle.curMiscMenuItem > 4) {
+      uibattle.curMiscMenuItem = 0;
+    }
+  } else if (input.isKeyPressed(Key.Search)) {
+    return uibattle.curMiscMenuItem + 1;
+  }
+  else if (input.isKeyPressed(Key.Menu)) {
+    return 0;
+  }
+
+  return 0xFFFF;
 };
 
 /**
@@ -319,7 +368,43 @@ uibattle.miscMenuUpdate = function() {
  * @return {Number} The selected item number. 0 if cancelled, 0xFFFF if not confirmed.
  */
 uibattle.miscItemSubMenuUpdate = function() {
+  var menuItems = [
+    //              value label                     enabled position
+    new ui.MenuItem(0,    BATTLEUI_LABEL_USEITEM,   true,   PAL_XY(44, 62)),
+    new ui.MenuItem(1,    BATTLEUI_LABEL_THROWITEM, true,   PAL_XY(44, 80))
+  ];
 
+  // Draw the menu
+  uibattle.drawMiscMenu(1, true);
+  ui.createBox(PAL_XY(30, 50), 1, 1, 0, false);
+
+  // Draw the menu items
+  for (var i = 0; i < 2; i++) {
+    var color = ui.MENUITEM_COLOR;
+
+    if (i == uibattle.curSubMenuItem) {
+      color = ui.MENUITEM_COLOR_SELECTED;
+    }
+
+    ui.drawText(
+      ui.getWord(menuItems[i].wordNum),
+      menuItems[i].pos, color,
+      true, false
+    );
+  }
+
+  // Process inputs
+  if (input.isKeyPressed(Key.Up | Key.Left)) {
+    uibattle.curSubMenuItem = 0;
+  } else if (input.isKeyPressed(Key.Down | Key.Right)) {
+    uibattle.curSubMenuItem = 1;
+  } else if (input.isKeyPressed(Key.Search)) {
+    return uibattle.curSubMenuItem + 1;
+  } else if (input.isKeyPressed(Key.Menu)) {
+    return 0;
+  }
+
+  return 0xFFFF;
 };
 
 /**
