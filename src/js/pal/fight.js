@@ -582,6 +582,71 @@ fight.init = function*(surf, _battle) {
    */
   battle.showPlayerPreMagicAnim = function*(playerIndex, summon) {
     log.debug(['[BATTLE] showPlayerPreMagicAnim', playerIndex, summon].join(' '));
+    var playerRole = Global.party[playerIndex].playerRole;
+    var currentPlayer = Global.battle.player[playerIndex];
+
+    for (var i = 0; i < 4; i++) {
+      currentPlayer.pos = PAL_XY(
+        PAL_X(currentPlayer.pos) - (4 - i),
+        PAL_Y(currentPlayer.pos) - ~~((4 - i) / 2)
+      );
+
+      yield battle.delay(1, 0, true);
+    }
+
+    yield battle.delay(2, 0, true);
+
+    currentPlayer.currentFrame = 5;
+    sound.play(GameData.playerRoles.magicSound[playerRole]);
+
+    if (!summon) {
+      var x = PAL_X(currentPlayer.pos);
+      var y = PAL_Y(currentPlayer.pos);
+
+      index = GameData.battleEffectIndex[ battle.getPlayerBattleSprite(playerRole)][0];
+      index *= 10;
+      index += 15;
+
+      for (var i = 0; i < 10; i++) {
+        var frame = Global.battle.effectSprite.getFrame(index++);
+
+        // Update the gesture of enemies.
+        for (var j = 0; j <= Global.battle.maxEnemyIndex; j++) {
+          var enemy = Global.battle.enemy[j];
+          if (enemy.objectID == 0 ||
+              enemy.status[PlayerStatus.Sleep] != 0 ||
+              enemy.status[PlayerStatus.Paralyzed] != 0) {
+            continue;
+          }
+
+          if (--enemy.e.idleAnimSpeed == 0) {
+            enemy.currentFrame++;
+            enemy.e.idleAnimSpeed =
+              GameData.enemy[GameData.object[enemy.objectID].enemy.enemyID].idleAnimSpeed;
+          }
+
+          if (enemy.currentFrame >= enemy.e.wIdleFrames) {
+            enemy.currentFrame = 0;
+          }
+        }
+
+        battle.makeScene();
+        surface.blitSurface(Global.battle.sceneBuf, null, surface.byteBuffer, null);
+
+        surface.blitRLE(
+          frame,
+          PAL_XY(x - ~~(frame.width / 2), y - frame.height)
+        );
+
+        yield uibattle.update();
+
+        surface.updateScreen(null);
+
+        yield sleepByFrame(1);
+      }
+    }
+
+    yield battle.delay(1, 0, true);
   };
 
   /**
