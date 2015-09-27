@@ -795,8 +795,8 @@ battle.enemyEscape = function*() {
   while (f) {
     f = false;
 
-    for (j = 0; j <= Global.battle.wMaxEnemyIndex; j++) {
-      var enemy = Global.battle.rgEnemy[j];
+    for (j = 0; j <= Global.battle.maxEnemyIndex; j++) {
+      var enemy = Global.battle.enemy[j];
       if (enemy.objectID == 0) {
         continue;
       }
@@ -818,7 +818,7 @@ battle.enemyEscape = function*() {
     surface.blitSurface(Global.battle.sceneBuf, null, surface.byteBuffer, null);
     surface.updateScreen(null);
 
-    yield sleepByFrame(1);
+    yield sleep(10);
   }
 
   yield sleep(500)
