@@ -989,7 +989,7 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
       if (i < 0) {
         i = eventObjectID;
       }
-      yield battle.battleSimulateMagic(i, sc.operand[0], sc.operand[1]);
+      yield battle.simulateMagic(i, sc.operand[0], sc.operand[1]);
       break;
     case 0x0043:
       script.debug('[SCRIPT] Set background music');

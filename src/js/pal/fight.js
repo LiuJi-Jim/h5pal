@@ -1195,6 +1195,39 @@ fight.init = function*(surf, _battle) {
    */
   battle.showPlayerUseItemAnim = function*(playerIndex, objectID, target) {
     log.debug(['[BATTLE] showPlayerUseItemAnim', playerIndex, objectID, target].join(' '));
+    yield battle.delay(4, 0, true);
+
+    var currentPlayer = Global.battle.player[playerIndex];
+
+    currentPlayer.pos = PAL_XY(PAL_X(currentPlayer.pos) - 15, PAL_Y(currentPlayer.pos) - 7);
+
+    currentPlayer.currentFrame = 5;
+
+    sound.play(28);
+
+    for (var i = 0; i <= 6; i++) {
+      if (target == -1) {
+        for (var j = 0; j <= Global.maxPartyMemberIndex; j++) {
+          Global.battle.player[j].colorShift = i;
+        }
+      } else {
+         Global.battle.player[target].colorShift = i;
+      }
+
+      yield battle.delay(1, objectID, true);
+    }
+
+    for (var i = 5; i >= 0; i--) {
+      if (target == -1) {
+        for (j = 0; j <= Global.maxPartyMemberIndex; j++) {
+          Global.battle.player[j].colorShift = i;
+        }
+      } else {
+         Global.battle.player[target].colorShift = i;
+      }
+
+      yield battle.delay(1, objectID, true);
+    }
   };
 
   /**
@@ -1318,6 +1351,7 @@ fight.init = function*(surf, _battle) {
    */
   battle.showPlayerOffMagicAnim = function*(playerIndex, objectID, target) {
     log.debug(['[BATTLE] showPlayerOffMagicAnim', playerIndex, objectID, target].join(' '));
+    playerIndex = SHORT(playerIndex);
     var magicNum = GameData.object[objectID].magic.magicNumber;
     var effectNum = GameData.magic[magicNum].effect;
 
@@ -1914,7 +1948,7 @@ fight.init = function*(surf, _battle) {
     var playerRole = Global.party[playerIndex].playerRole;
     var coopPos = [ [208, 157], [234, 170], [260, 183] ];
 
-    Global.battle.wMovingPlayerIndex = playerIndex;
+    Global.battle.movingPlayerIndex = playerIndex;
     Global.battle.blow = 0;
 
     battle.playerValidateAction(playerIndex);
@@ -2955,6 +2989,75 @@ fight.init = function*(surf, _battle) {
 
   battle.stealFromEnemy = function*(target, stealRate) {
     log.debug(['[BATTLE] stealFromEnemy', target, stealRate].join(' '));
+    var playerIndex = Global.battle.movingPlayerIndex;
+    var currentPlayer = Global.battle.player[playerIndex];
+    var targetEnemy = Global.battle.enemy[target];
+
+    currentPlayer.currentFrame = 10;
+    var offset = (target - playerIndex) * 8;
+
+    var x = PAL_X(targetEnemy.pos) + 64 - offset;
+    var y = PAL_Y(targetEnemy.pos) + 20 - offset / 2;
+
+    currentPlayer.pos = PAL_XY(x, y);
+
+    yield battle.delay(1, 0, true);
+
+    for (var i = 0; i < 5; i++) {
+      x -= i + 8;
+      y -= 4;
+
+      currentPlayer.pos = PAL_XY(x, y);
+
+      if (i == 4) {
+        targetEnemy.colorShift = 6;
+      }
+
+      yield battle.delay(1, 0, true);
+    }
+
+    targetEnemy.colorShift = 0;
+    x--;
+    currentPlayer.pos = PAL_XY(x, y);
+    yield battle.delay(3, 0, true);
+
+    currentPlayer.state = FighterState.Wait;
+    currentPlayer.timeMeter = 0;
+    battle.updateFighters();
+    yield battle.delay(1, 0, true);
+
+    var s;
+    if (targetEnemy.e.stealItem > 0 &&
+        (randomLong(0, 10) <= stealRate || stealRate == 0)) {
+      if (targetEnemy.e.stealItem == 0) {
+        // stolen coins
+        var c = targetEnemy.e.stealItem / randomLong(2, 3);
+        targetEnemy.e.stealItem -= c;
+        Global.cash += c;
+
+        if (c > 0) {
+          s = ui.getWord(34);
+          s.push(' '.charCodeAt(0));
+          s = s.concat(c.toString().map(function(ch) {
+            return ch.charCodeAt(0);
+          }));
+          s.push(' '.charCodeAt(0));
+          s = s.concat(ui.getWord(10));
+        }
+      } else {
+        // stolen item
+        targetEnemy.e.stealItem--;
+        script.addItemToInventory(targetEnemy.e.stealItem, 1);
+
+        s = ui.getWord(34);
+        s = s.concat(ui.getWord(targetEnemy.e.stealItem))
+      }
+
+      if (s && s[0] != 0) {
+         ui.startDialog(DialogPosition.CenterWindow, 0, 0, false);
+         ui.showDialogText(s);
+      }
+    }
   };
 
   /**
@@ -2965,6 +3068,71 @@ fight.init = function*(surf, _battle) {
    */
   battle.simulateMagic = function*(target, magicObjectID, baseDamage) {
     log.debug(['[BATTLE] simulateMagic', target, magicObjectID, baseDamage].join(' '));
+    var damage, def;
+    if (GameData.object[magicObjectID].magic.flags & MagicFlag.ApplyToAll) {
+      target = -1;
+    } else if (target == -1) {
+      target = battle.selectAutoTarget();
+    }
+
+    // Show the magic animation
+    yield battle.showPlayerOffMagicAnim(0xFFFF, magicObjectID, target);
+
+    if (GameData.magic[GameData.object[magicObjectID].magic.magicNumber].baseDamage > 0 || baseDamage > 0) {
+      if (target == -1) {
+        // Apply to all enemies
+        for (var i = 0; i <= Global.battle.maxEnemyIndex; i++) {
+          var enemy = Global.battle.enemy[i];
+          if (enemy.objectID == 0) {
+            continue;
+          }
+
+          def = SHORT(enemy.e.wDefense);
+          def += (enemy.e.level + 6) * 4;
+
+          if (def < 0) {
+            def = 0;
+          }
+
+          damage = battle.calcMagicDamage(
+            baseDamage,
+            WORD(def),
+            enemy.e.elemResistance,
+            enemy.e.poisonResistance,
+            magicObjectID
+          );
+
+          if (damage < 0) {
+            damage = 0;
+          }
+
+          enemy.e.health -= damage;
+        }
+      } else {
+        // Apply to one enemy
+        var targetEnemy = Global.battle.enemy[target];
+        def = SHORT(targetEnemy.e.defense);
+        def += (targetEnemy.e.level + 6) * 4;
+
+        if (def < 0) {
+          def = 0;
+        }
+
+        damage = battle.calcMagicDamage(
+          baseDamage,
+          WORD(def),
+          targetEnemy.e.elemResistance,
+          targetEnemy.e.poisonResistance,
+          magicObjectID
+        );
+
+        if (damage < 0) {
+          damage = 0;
+        }
+
+        targetEnemy.e.health -= damage;
+      }
+    }
   };
 };
 

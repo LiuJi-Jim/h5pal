@@ -444,7 +444,7 @@ uibattle.useItem = function() {
 
   if (selectedItem != 0xFFFF) {
     if (selectedItem != 0) {
-      Global.battle.UI.actionType = BattleAction.UseItem;
+      Global.battle.UI.actionType = BattleActionType.UseItem;
       Global.battle.UI.objectID = selectedItem;
 
       if (GameData.object[selectedItem].item.flags & ItemFlag.ApplyToAll) {
