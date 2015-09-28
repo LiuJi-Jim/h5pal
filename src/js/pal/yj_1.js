@@ -218,7 +218,7 @@ yj_1.decompress = function(Source) {
       root, node;
   //if (SWAP32(hdr.Signature) != 0x315f4a59)
   if (hdr.Signature != 'YJ_1')
-    return -1;
+    return new Uint8Array(0);
   //if (SWAP32(hdr.UncompressedLength) > DestSize)
   //  return -1;
 

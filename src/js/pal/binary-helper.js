@@ -505,6 +505,7 @@ var readTypedArray = global.readTypedArray = function(type, buf) {
   for (var i = 0, offset = 0; i < len; i++, offset += size) {
     list.push(new type(buf.subarray(offset, offset + size)));
   }
+  list.uint8Array = buf;
   return list;
 };
 

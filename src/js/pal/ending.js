@@ -192,7 +192,7 @@ ending.scrollFBP = function*(chunkNum, scrollSpeed, scrollDown) {
  * Show the ending animation.
  */
 ending.endingAnimation = function*() {
-  log.debug(['ending.endingAnimation', spriteNum].join(' '));
+  log.debug(['ending.endingAnimation'].join(' '));
   var girlPos = 180;
 
   var upper = surface.getRect(0, 0, 320, 200);

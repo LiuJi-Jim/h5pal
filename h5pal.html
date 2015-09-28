@@ -14,6 +14,10 @@
       <canvas id="debug" style=""></canvas>
       <div id="debugLayer"></div>
     </div>
+    <div class="control-panel">
+      <input type="button" id="save" value="SAVE" />
+      <input type="button" id="load" value="LOAD" />
+    </div>
   </div>
   <script src="/dist/lib/requirejs/require.js"></script>
   <script>
@@ -48,7 +52,37 @@
   });
   </script>
   <script>
-  require(['h5pal']);
+  require(['h5pal'], function(pal) {
+    $('#save').click(function() {
+      co(function*() {
+        var s = game._saveGame();
+        var buf = s.uint8Array
+        var arr = new Array(buf.length);
+        for (var i = 0; i < buf.length; ++i) {
+          arr[i] = buf[i];
+        }
+        localStorage['PAL-SAVE'] = JSON.stringify(arr);
+      })
+    });
+    $('#load').click(function() {
+      co(function*() {
+        try {
+          var str = localStorage['PAL-SAVE'];
+          var arr = JSON.parse(str);
+          var buf = new Uint8Array(SaveData.size);
+          for (var i = 0; i < arr.length; ++i) {
+            buf[i] = arr[i];
+          }
+          var s = new SaveData(buf);
+          yield game._initGameData(s);
+        } catch(ex) {
+          alert('failed');
+        }
+      });
+    });
+  });
+  </script>
+  <script>
   </script>
 </body>
 </html>

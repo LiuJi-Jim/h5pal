@@ -1220,7 +1220,7 @@ script.interpretInstruction = function*(scriptEntry, eventObjectID) {
       w = sc.operand[1] * 5;
       w += GameData.playerRoles.attackStrength[Global.party[Global.battle.movingPlayerIndex].playerRole];
       w += randomLong(0, 4);
-      yield battle.battleSimulateMagic(SHORT(eventObjectID), sc.operand[0], w);
+      yield battle.simulateMagic(SHORT(eventObjectID), sc.operand[0], w);
       break;
     case 0x0067:
       script.debug('[SCRIPT] Enemy use magic');

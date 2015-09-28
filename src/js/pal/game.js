@@ -99,7 +99,10 @@ game.loadGame = function*(slot) {
   } catch(ex) {
     return false;
   }
+  return game._loadGame(s);
+};
 
+game._loadGame = function(s) {
   // Adjust endianness
   //DO_BYTESWAP(&s, sizeof(SAVEDGAME));
 
@@ -151,10 +154,48 @@ game.loadGame = function*(slot) {
   GameData.enteringScene = false;
 
   //PAL_CompressInventory();
-  //yield script.compressInventory();
+  script.compressInventory();
 
   // Success
   return true;
+};
+
+game._saveGame = function() {
+  var saveData = new SaveData();
+
+  saveData.viewportX = PAL_X(Global.viewport);
+  saveData.viewportY = PAL_Y(Global.viewport);
+  saveData.maxPartyMemberIndex = Global.numPartyMember;
+  saveData.numScene = Global.numScene;
+  saveData.nightPalette = (Global.paletteOffset != 0);
+  saveData.partyDirection = Global.partyDirection;
+  saveData.numMusic = Global.numMusic;
+  saveData.numBattleMusic = Global.numBattleMusic;
+  saveData.numBattleField = Global.numBattleField;
+  saveData.screenWave = Global.screenWave;
+  saveData.collectValue = Global.collectValue;
+  saveData.layer = Global.layer;
+  saveData.chaseRange = Global.chaseRange;
+  saveData.chaseSpeedChangeCycles = Global.chaseSpeedChangeCycles;
+  saveData.numFollower = Global.numFollower;
+  saveData.cash = Global.cash;
+  if (!PAL_CLASSIC) {
+    saveData.battleSpeed = Global.battleSpeed;
+    if (saveData.battleSpeed > 5 || saveData.battleSpeed == 0) {
+      saveData.battleSpeed = 2;
+    }
+  }
+  memcpy(saveData.party.uint8Array, Global.party.uint8Array, saveData.party.uint8Array.length);
+  memcpy(saveData.trail.uint8Array, Global.trail.uint8Array, saveData.trail.uint8Array.length);
+  memcpy(saveData.exp.uint8Array, Global.exp.uint8Array, saveData.exp.uint8Array.length);
+  memcpy(saveData.playerRoles.uint8Array, GameData.playerRoles.uint8Array, saveData.playerRoles.uint8Array.length);
+  memcpy(saveData.poisonStatus.uint8Array, Global.poisonStatus.uint8Array, saveData.poisonStatus.uint8Array.length);
+  memcpy(saveData.inventory.uint8Array, Global.inventory.uint8Array, saveData.inventory.uint8Array.length);
+  memcpy(saveData.scene.uint8Array, GameData.scene.uint8Array, saveData.scene.uint8Array.length);
+  memcpy(saveData.object.uint8Array, GameData.object.uint8Array, saveData.object.uint8Array.length);
+  memcpy(saveData.eventObject.uint8Array, GameData.eventObject.uint8Array, saveData.eventObject.uint8Array.length);
+
+  return saveData;
 };
 
 game.initGameData = function*(slot) {
@@ -167,6 +208,21 @@ game.initGameData = function*(slot) {
     // Cannot load the saved game file. Load the defaults.
     yield game.loadDefaultGame();
   }
+
+  Global.gameStart = true;
+  Global.needToFadeIn = false;
+  Global.curInvMenuItem = 0;
+  Global.inBattle = false;
+
+  //game.clearPlayerStatus();
+  memset(Global.playerStatus.uint8Array, 0, Global.playerStatus.uint8Array.length);
+  yield script.updateEquipments();
+};
+
+game._initGameData = function*(s) {
+  yield game.initGlobalGameData();
+
+  game._loadGame(s);
 
   Global.gameStart = true;
   Global.needToFadeIn = false;

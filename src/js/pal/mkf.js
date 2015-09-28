@@ -31,7 +31,7 @@ utils.extend(MKF.prototype, {
   readChunk: function(chunkNum) {
     // Get the total number of chunks.
     if (chunkNum >= this.getChunkCount()) {
-      return false;
+      return new Uint8Array(0);
     }
 
     if (this._chunks[chunkNum]) return this._chunks[chunkNum];
@@ -55,7 +55,7 @@ utils.extend(MKF.prototype, {
       */
       return (this._chunks[chunkNum] = buf);
     } else {
-      return (this._chunks[chunkNum] = false);
+      return (this._chunks[chunkNum] = new Uint8Array(0));
     }
   },
   /**
