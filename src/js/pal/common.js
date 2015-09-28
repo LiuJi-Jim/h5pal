@@ -1,5 +1,7 @@
 global.PAL_CLASSIC = true;
 global.INVINCIBLE = false;
+global.SUPER_ATTACK = false;
+global.SUPER_DEFENSE = false;
 
 var slice = Array.prototype.slice;
 

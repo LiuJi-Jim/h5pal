@@ -342,7 +342,6 @@ script_extras.init = function*(surf, _script) {
     for (var i=0; i<Const.MAX_PLAYER_EQUIPMENTS; ++i) {
       w += Global.equipmentEffect[i].attackStrength[role];
     }
-    if (INVINCIBLE) w = 5000; // WARNING debugging
 
     return w;
   };
@@ -352,7 +351,6 @@ script_extras.init = function*(surf, _script) {
     for (var i=0; i<Const.MAX_PLAYER_EQUIPMENTS; ++i) {
       w += Global.equipmentEffect[i].magicStrength[role];
     }
-    if (INVINCIBLE) w = 5000; // WARNING debugging
 
     return w;
   };
@@ -362,7 +360,6 @@ script_extras.init = function*(surf, _script) {
     for (var i=0; i<Const.MAX_PLAYER_EQUIPMENTS; ++i) {
       w += Global.equipmentEffect[i].defense[role];
     }
-    if (INVINCIBLE) w = 5000; // WARNING debugging
 
     return w;
   };
@@ -390,7 +387,6 @@ script_extras.init = function*(surf, _script) {
     for (var i=0; i<Const.MAX_PLAYER_EQUIPMENTS; ++i) {
       w += Global.equipmentEffect[i].poisonResistance[role];
     }
-    if (INVINCIBLE) w = 5000; // WARNING debugging
 
     return w;
   };
@@ -400,7 +396,6 @@ script_extras.init = function*(surf, _script) {
     for (var i=0; i<Const.MAX_PLAYER_EQUIPMENTS; ++i) {
       w += Global.equipmentEffect[i].elementalResistance[attr][role];
     }
-    if (INVINCIBLE) w = 5000; // WARNING debugging
     if (w > 100) {
       w = 100;
     }

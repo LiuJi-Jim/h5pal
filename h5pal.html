@@ -17,6 +17,9 @@
     <div class="control-panel">
       <input type="button" id="save" value="SAVE" />
       <input type="button" id="load" value="LOAD" />
+      <label for="invincible">无敌<input type="checkbox" id="invincible" /></label>
+      <label for="superAttack">超强攻击力<input type="checkbox" id="superAttack" /></label>
+      <label for="superDefense">超强防御力<input type="checkbox" id="superDefense" /></label>
     </div>
   </div>
   <script src="/dist/lib/requirejs/require.js"></script>
@@ -80,6 +83,25 @@
         }
       });
     });
+    $.fn.checked = function(f) {
+      if (typeof f === 'undefined') {
+        return $(this).is(':checked');
+      }
+      if (!f) {
+        return $(this).removeAttr('checked');
+      } else {
+        return $(this).attr('checked', 'checked');
+      }
+    };
+    ['invincible', 'superAttack', 'superDefense'].forEach(function(key) {
+      var variable = key.replace(/[A-Z]/g, function($0) { return '_' + $0; }).toUpperCase();
+      var checkbox = $('#' + key);
+      checkbox.checked(window[variable]);
+      checkbox.change(function(e) {
+        var me = $(this);
+        window[variable] = me.checked();
+      })
+    })
   });
   </script>
   <script>

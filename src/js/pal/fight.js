@@ -1991,6 +1991,10 @@ fight.init = function*(surf, _battle) {
               damage = 1;
             }
 
+            if (SUPER_ATTACK) {
+              damage = 6666;
+            }
+
             Global.battle.enemy[target].e.health -= damage;
 
             if (t == 0) {
@@ -2040,6 +2044,10 @@ fight.init = function*(surf, _battle) {
 
               if (damage <= 0) {
                 damage = 1;
+              }
+
+              if (SUPER_ATTACK) {
+                damage = 6666;
               }
 
               enemy.e.health -= damage;
@@ -2117,6 +2125,10 @@ fight.init = function*(surf, _battle) {
 
           if (damage > SHORT(GameData.playerRoles.HP[Global.party[target].playerRole])) {
             damage = GameData.playerRoles.HP[Global.party[target].playerRole];
+          }
+
+          if (SUPER_DEFENSE) {
+            damage = 1;
           }
 
           GameData.playerRoles.HP[Global.party[target].playerRole] -= damage;
@@ -2248,6 +2260,10 @@ fight.init = function*(surf, _battle) {
               damage = 1;
             }
 
+            if (SUPER_ATTACK) {
+              damage = 6666;
+            }
+
             enemy.e.health -= damage;
           }
         } else {
@@ -2259,6 +2275,10 @@ fight.init = function*(surf, _battle) {
 
           if (damage <= 0) {
             damage = 1;
+          }
+
+          if (SUPER_ATTACK) {
+            damage = 6666;
           }
 
           Global.battle.enemy[target].e.health -= damage;
@@ -2442,22 +2462,31 @@ fight.init = function*(surf, _battle) {
                     damage = 1;
                   }
 
+                  if (SUPER_ATTACK) {
+                    damage = 6666;
+                  }
+
                   enemy.e.health -= damage;
                 }
               } else {
                 // Attack one enemy
+                var targetEnemy = Global.battle.enemy[target];
                 str = script.getPlayerMagicStrength(playerRole);
-                def = Global.battle.enemy[target].e.defense;
-                def += (Global.battle.enemy[target].e.level + 6) * 4;
+                def = targetEnemy.e.defense;
+                def += (targetEnemy.e.level + 6) * 4;
 
                 damage = battle.calcMagicDamage(str, def,
-                  Global.battle.enemy[target].e.elemResistance, Global.battle.enemy[target].e.poisonResistance, object);
+                  targetEnemy.e.elemResistance, targetEnemy.e.poisonResistance, object);
 
                 if (damage <= 0) {
                   damage = 1;
                 }
 
-                Global.battle.enemy[target].e.health -= damage;
+                if (SUPER_ATTACK) {
+                  damage = 6666;
+                }
+
+                targetEnemy.e.health -= damage;
               }
             }
           }
@@ -2698,6 +2727,10 @@ fight.init = function*(surf, _battle) {
               damage = GameData.playerRoles.HP[w];
             }
 
+            if (SUPER_DEFENSE) {
+              damage = 1;
+            }
+
             if (!INVINCIBLE) {
               GameData.playerRoles.HP[w] -= damage;
             }
@@ -2728,6 +2761,10 @@ fight.init = function*(surf, _battle) {
 
           if (damage > GameData.playerRoles.HP[playerRole]) {
             damage = GameData.playerRoles.HP[playerRole];
+          }
+
+          if (SUPER_DEFENSE) {
+            damage = 1;
           }
 
           if (!INVINCIBLE) {
@@ -2909,6 +2946,10 @@ fight.init = function*(surf, _battle) {
         damage = ~~damage;
 
         if (damage <= 0) {
+          damage = 1;
+        }
+
+        if (SUPER_DEFENSE) {
           damage = 1;
         }
 
@@ -3106,6 +3147,10 @@ fight.init = function*(surf, _battle) {
             damage = 0;
           }
 
+          if (SUPER_ATTACK) {
+            damage = 6666;
+          }
+
           enemy.e.health -= damage;
         }
       } else {
@@ -3128,6 +3173,10 @@ fight.init = function*(surf, _battle) {
 
         if (damage < 0) {
           damage = 0;
+        }
+
+        if (SUPER_ATTACK) {
+          damage = 6666;
         }
 
         targetEnemy.e.health -= damage;
