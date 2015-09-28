@@ -85,13 +85,9 @@
     });
     $.fn.checked = function(f) {
       if (typeof f === 'undefined') {
-        return $(this).is(':checked');
+        return $(this).prop('checked');
       }
-      if (!f) {
-        return $(this).removeAttr('checked');
-      } else {
-        return $(this).attr('checked', 'checked');
-      }
+      return $(this).prop('checked', f);
     };
     ['invincible', 'superAttack', 'superDefense'].forEach(function(key) {
       var variable = key.replace(/[A-Z]/g, function($0) { return '_' + $0; }).toUpperCase();
