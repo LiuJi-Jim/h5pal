@@ -57,6 +57,8 @@
   <script>
   require(['h5pal'], function(pal) {
     $('#save').click(function() {
+      var me = $(this), text = me.val();
+      me.val(text + '...');
       co(function*() {
         var s = game._saveGame();
         var buf = s.uint8Array
@@ -65,6 +67,9 @@
           arr[i] = buf[i];
         }
         localStorage['PAL-SAVE'] = JSON.stringify(arr);
+        me.val(text + '...Done!');
+        yield sleep(1000);
+        me.val(text);
       })
     });
     $('#load').click(function() {

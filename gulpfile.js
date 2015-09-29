@@ -68,6 +68,7 @@ gulp.task('build', function(callback) {
 
 gulp.task('serve', function() {
   connect.server({
+    host: '0.0.0.0',
     port: port
   });
 });

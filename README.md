@@ -58,9 +58,9 @@ h5pal
 | 调色盘 | 90% |
 | 文本 | 99% |
 | 脚本（天坑） | 70% |
-| 平常UI | 70% |
-| 战斗UI | 30% |
-| 战斗（天坑） | 40% |
+| 平常UI | 90% |
+| 战斗UI | 90% |
+| 战斗（天坑） | 70% |
 | 播片 | 90% |
 | 结局 | 95% |
 | 音乐 | 0% |
@@ -138,9 +138,9 @@ Due to the completeness and bugs of battle module, you will be judged as win whe
 | Palette | 90% |
 | Text | 99% |
 | Script (OMG) | 70% |
-| Game UI | 70% |
-| Battle UI | 30% |
-| Battle (OMG) | 40% |
+| Game UI | 90% |
+| Battle UI | 90% |
+| Battle (OMG) | 70% |
 | Movie | 90% |
 | Ending | 95% |
 | Music | 0% |

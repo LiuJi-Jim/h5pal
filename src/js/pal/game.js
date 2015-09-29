@@ -165,9 +165,9 @@ game._saveGame = function() {
 
   saveData.viewportX = PAL_X(Global.viewport);
   saveData.viewportY = PAL_Y(Global.viewport);
-  saveData.maxPartyMemberIndex = Global.numPartyMember;
+  saveData.numPartyMember = Global.maxPartyMemberIndex;
   saveData.numScene = Global.numScene;
-  saveData.nightPalette = (Global.paletteOffset != 0);
+  saveData.paletteOffset = (Global.nightPalette ? 0x180 : 0);
   saveData.partyDirection = Global.partyDirection;
   saveData.numMusic = Global.numMusic;
   saveData.numBattleMusic = Global.numBattleMusic;
