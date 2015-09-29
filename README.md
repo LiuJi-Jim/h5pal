@@ -49,7 +49,7 @@ h5pal
 | --- | ---:|
 | 资源 | 90% |
 | 读档 | 99% |
-| 存档 | 0% |
+| 存档 | 40% |
 | Surface | 90% |
 | 位图 | 99% |
 | Sprite | 99% |
@@ -129,7 +129,7 @@ Due to the completeness and bugs of battle module, you will be judged as win whe
 | --- | ---:|
 | Resource | 90% |
 | Loading | 99% |
-| Saving | 0% |
+| Saving | 40% |
 | Surface | 90% |
 | Bitmap | 99% |
 | Sprite | 99% |
