@@ -231,6 +231,7 @@ ui.drawItemText = function(item, color, shadow, update) {
 ui.readMenu = function*(onchange, list, defaultItem, labelColor, nocancel) {
   onchange = onchange || noop;
   defaultItem = defaultItem || 0;
+  if (defaultItem < 0) defaultItem = 0;
   var currentItem = (defaultItem < list.length ? defaultItem : 0);
 
   // Draw all the menu texts.
