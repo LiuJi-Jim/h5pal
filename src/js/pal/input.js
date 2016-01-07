@@ -184,11 +184,12 @@ function keyboardEventFilter(evt) {
         input.keyPress &= ~palKey;
         if (palKey in PalKeysToPalDirs) {
           if (input.dir === PalKeysToPalDirs[palKey]) {
-            input.prevDir = input.dir;
-            input.dir = Direction.Unknown;
-            log.trace('[INPUT] stopped walking %d', input.prevDir);
-          } else {
-
+            log.trace('[INPUT] walking %d back to %d', input.dir, input.prevDir);
+            input.dir = input.prevDir;
+            input.prevDir = Direction.Unknown;
+          } else if (input.prevDir === PalKeysToPalDirs[palKey]) {
+            log.trace('[INPUT] cancel prev walking %d', input.prevDir);
+            input.prevDir = Direction.Unknown;
           }
         }
         /*
