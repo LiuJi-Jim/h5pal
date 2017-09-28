@@ -307,7 +307,7 @@ uigame.systemMenu = function*() {
             if (time > savedTimes) savedTimes = time;
           }
         }
-        yield game.saveGame(slot, savedTime + 1);
+        yield game.saveGame(slot, savedTimes + 1);
       }
       break;
     case 2:
